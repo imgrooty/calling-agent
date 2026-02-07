@@ -4,7 +4,7 @@
   --color-brand-primary: #6366f1;
   --color-brand-secondary: #0ea5e9;
   --color-brand-accent: #10b981;
-  --font-display: "Outfit", sans-serif;
+  --font-display: var(--font-outfit), sans-serif;
 }
 
 @layer base {
@@ -58,7 +58,7 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-primary to-brand-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#6366f1] to-[#0ea5e9];
   }
 
   .animate-pulse-slow {

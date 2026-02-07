@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const titles = [
     "Never Sleeps",
     "Closes More Deals",
-    "Qualifies Leads 24/7",
+    "Track Leads 24/7",
     "Scales Your Team",
 ];
 
@@ -44,7 +44,7 @@ export const Hero = () => {
                     transition={{ duration: 0.8 }}
                     className="flex flex-col items-center"
                 >
-                    <h1 className="text-4xl md:text-5xl lg:text-[66px] font-display mb-8 tracking-tight">
+                    <h1 className="text-4xl md:text-5xl lg:text-[66px] font-display mt-10 mb-8">
                         <span className="block mb-2">Your AI Sales Team</span>
                         <div className="relative h-[1.2em] w-full mt-2 lg:mt-4 flex justify-center">
                             <AnimatePresence mode="wait">
@@ -72,10 +72,7 @@ export const Hero = () => {
                             Get Started
                             <ArrowRight className="w-5 h-5" />
                         </button>
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-5 bg-white/10 text-white font-bold border border-white/20 rounded-full hover:bg-white/20 backdrop-blur-sm transition-all shadow-sm text-base">
-                            <Play className="w-5 h-5 fill-white" />
-                            Watch Demo
-                        </button>
+
                     </div>
                 </motion.div>
             </div>

@@ -27,7 +27,7 @@ export const Navbar = () => {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Link href="/login" className="hidden sm:block text-sm font-medium hover:text-brand-primary">Log in</Link>
+                    <Link href="/login" className="hidden sm:block text-sm font-medium hover:text-brand-primary">Admin Login</Link>
                     <Link
                         href="/get-started"
                         className="flex items-center gap-2 px-5 py-2.5 bg-brand-primary text-white text-sm font-semibold rounded-full hover:bg-brand-primary/90 hover:shadow-lg hover:shadow-brand-primary/20 transition-all active:scale-95"
