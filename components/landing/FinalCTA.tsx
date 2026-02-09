@@ -25,13 +25,17 @@ export const FinalCTA = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                        <button className="w-full sm:w-auto px-10 py-5 bg-white text-brand-primary font-black rounded-full hover:bg-slate-50 hover:scale-105 transition-all shadow-2xl">
-                            Start Your Free Trial
-                        </button>
-                        <button className="w-full sm:w-auto px-10 py-5 bg-brand-primary border border-white/30 text-white font-black rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2">
-                            Speak to an Expert
-                            <ArrowRight className="w-5 h-5" />
-                        </button>
+                        <Link href="/login" className="w-full sm:w-auto">
+                            <button className="w-full sm:w-auto px-10 py-5 bg-white text-brand-primary font-black rounded-full hover:bg-slate-50 hover:scale-105 transition-all shadow-2xl">
+                                Start Your Free Trial
+                            </button>
+                        </Link>
+                        <Link href="/login" className="w-full sm:w-auto">
+                            <button className="w-full sm:w-auto px-10 py-5 bg-brand-primary border border-white/30 text-white font-black rounded-full hover:bg-white/10 transition-all flex items-center justify-center gap-2">
+                                Speak to an Expert
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                        </Link>
                     </div>
                 </motion.div>
             </div>
