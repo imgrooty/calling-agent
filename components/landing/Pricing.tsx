@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const tiers = [
     {
@@ -71,10 +72,12 @@ export const Pricing = () => {
                                 ))}
                             </ul>
 
-                            <button className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#131f49] text-white hover:bg-[#131f49]/90 hover:shadow-lg transition-all shadow-md group-hover:scale-[1.02]">
-                                {tier.cta}
-                                <ArrowRight className="w-4 h-4" />
-                            </button>
+                            <Link href="/login" className="w-full">
+                                <button className="w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 bg-[#131f49] text-white hover:bg-[#131f49]/90 hover:shadow-lg transition-all shadow-md group-hover:scale-[1.02]">
+                                    {tier.cta}
+                                    <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </Link>
                         </motion.div>
                     ))}
                 </div>

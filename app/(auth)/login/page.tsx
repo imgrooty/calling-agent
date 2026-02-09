@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Mail, Lock, Phone, ChevronLeft } from "lucide-react";
+import { ArrowRight, Mail, Lock, Phone, ChevronLeft, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -98,13 +99,20 @@ export default function LoginPage() {
                                         <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-[#0c1d56] dark:group-focus-within:text-indigo-400 transition-colors" />
                                     </div>
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         required
-                                        className="block w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-[#0c1d56]/50 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#0c1d56]/20 dark:focus:ring-indigo-500/40 focus:border-[#0c1d56] dark:focus:border-indigo-500 transition-all outline-none"
+                                        className="block w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-[#0c1d56]/50 border border-slate-200 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-[#0c1d56]/20 dark:focus:ring-indigo-500/40 focus:border-[#0c1d56] dark:focus:border-indigo-500 transition-all outline-none"
                                         placeholder="••••••••"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-[#0c1d56] dark:hover:text-indigo-400 transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -132,44 +140,20 @@ export default function LoginPage() {
                             </p>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 {/* Right Side - Image/Brand */}
-                <div className="relative hidden md:block bg-slate-900">
+                <div className="relative hidden md:block bg-[#0c1d56] overflow-hidden">
                     <Image
-                        src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80"
-                        alt="Office"
+                        src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&q=80&w=2000"
+                        alt="AI Calling Robot"
                         fill
-                        className="object-cover opacity-60 mix-blend-overlay"
+                        className="object-cover transition-transform duration-[3000ms] hover:scale-110"
                         priority
                     />
-                    {/* Subtle Overlay to blend with brand */}
-                    <div className="absolute inset-0 bg-[#0c1d56]/40 dark:bg-[#0c1d56]/60 backdrop-blur-[1px]" />
-
-                    {/* Minimal Branding on Image */}
-                    <Link href="/" className="absolute top-8 left-8 flex items-center gap-2 group z-20">
-                        <div className="bg-white p-2 rounded-lg shadow-lg">
-                            <Phone className="w-5 h-5 text-[#0c1d56]" />
-                        </div>
-                    </Link>
-
-                    <div className="absolute bottom-12 left-12 right-12 z-20 text-white">
-                        <h3 className="text-3xl font-display font-bold mb-4">Scale your sales with AI Agents.</h3>
-                        <p className="text-slate-200 text-lg leading-relaxed">
-                            "Fagoon's AI agents have transformed our lead qualification process, resulting in a 300% increase in qualified appointments."
-                        </p>
-                        <div className="mt-6 flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-sm">
-                                JD
-                            </div>
-                            <div>
-                                <p className="font-semibold">John Doe</p>
-                                <p className="text-sm text-indigo-200">VP of Sales, TechCorp</p>
-                            </div>
-                        </div>
-                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0c1d56]/60 via-transparent to-transparent" />
                 </div>
-            </motion.div>
-        </div>
+            </motion.div >
+        </div >
     );
 }

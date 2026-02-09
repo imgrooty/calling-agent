@@ -67,25 +67,8 @@ export default function Header({ onMenuClick, activeView }: HeaderProps) {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-4">
-                {/* Theme Toggle */}
-                <button
-                    onClick={toggleTheme}
-                    className="p-2 text-slate-400 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all"
-                >
-                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-                </button>
-
-                {/* Notifications */}
-                <button className="p-2 text-slate-400 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all relative">
-                    <Bell size={18} />
-                    <span className="absolute top-2 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full ring-2 ring-white dark:ring-[#0c1d56]"></span>
-                </button>
-
-                {/* Separator */}
-                <div className="h-6 w-[1px] bg-slate-200 dark:bg-white/10 mx-1"></div>
-
                 {/* Profile */}
-                <div className="relative" ref={dropdownRef}>
+                <div className="relative mr-4" ref={dropdownRef}>
                     <div
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center gap-3 pl-1 cursor-pointer group"
@@ -93,7 +76,7 @@ export default function Header({ onMenuClick, activeView }: HeaderProps) {
                         <div className="w-8 h-8 bg-gradient-to-tr from-[#0c1d56] to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white dark:ring-white/10 group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all">
                             AS
                         </div>
-                        <div className="hidden md:block text-sm">
+                        <div className="text-sm">
                             <p className="font-semibold text-[#0c1d56] dark:text-white leading-none">Ashish Sah</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Admin</p>
                         </div>

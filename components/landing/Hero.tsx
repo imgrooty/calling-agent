@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
@@ -25,14 +26,14 @@ export const Hero = () => {
     return (
         <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-black">
             {/* Video Background */}
-            <div className="absolute inset-0 w-full h-full z-0">
+            <div className="absolute inset-0 w-full h-full z-0 overflow-hidden">
                 <video
                     src="/assets/robot-animation.mp4"
                     autoPlay
                     loop
                     muted
                     playsInline
-                    className="w-full h-full object-cover"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 min-w-full min-h-full w-auto h-auto object-cover"
                 />
                 <div className="absolute inset-0 bg-black/60" />
             </div>
@@ -68,11 +69,12 @@ export const Hero = () => {
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto">
-                        <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-5 bg-[#0c1d56] text-white font-bold rounded-full hover:bg-brand-primary/90 hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/30 transition-all text-base border border-white/10">
-                            Get Started
-                            <ArrowRight className="w-5 h-5" />
-                        </button>
-
+                        <Link href="/login" className="w-full sm:w-auto">
+                            <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-10 py-5 bg-[#0c1d56] text-white font-bold rounded-full hover:bg-brand-primary/90 hover:scale-105 hover:shadow-2xl hover:shadow-brand-primary/30 transition-all text-base border border-white/10">
+                                Get Started
+                                <ArrowRight className="w-5 h-5" />
+                            </button>
+                        </Link>
                     </div>
                 </motion.div>
             </div>

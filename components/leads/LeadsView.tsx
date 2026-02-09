@@ -95,8 +95,8 @@ export default function LeadsView() {
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
-            {/* Header / Actions */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Desktop Header / Actions */}
+            <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h2 className="text-2xl font-bold text-[#0c1d56] dark:text-white">Leads Store</h2>
                     <p className="text-slate-500 dark:text-slate-400">Manage and track your potential clients</p>
@@ -124,8 +124,37 @@ export default function LeadsView() {
                 </div>
             </div>
 
-            {/* Leads Table */}
-            <div className="bg-white dark:bg-[#11224d]/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden">
+            {/* Mobile Header / Search */}
+            <div className="md:hidden space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-black text-[#0c1d56] dark:text-white uppercase tracking-tight">Leads Store</h2>
+                        <div className="h-1 w-8 bg-[#0c1d56] dark:bg-indigo-500 rounded-full mt-1"></div>
+                    </div>
+                </div>
+
+                <div className="relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                    <input
+                        type="text"
+                        placeholder="Search by name or phone..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-[#11224d] border border-slate-100 dark:border-white/5 rounded-2xl text-sm focus:ring-2 focus:ring-[#0c1d56] dark:focus:ring-indigo-500 outline-none shadow-sm dark:text-white"
+                    />
+                </div>
+
+                <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="w-[70%] mx-auto flex items-center justify-center gap-2 bg-[#0c1d56] text-white py-3.5 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-900/10 active:scale-95 transition-transform"
+                >
+                    <UserPlus size={18} />
+                    Add Lead
+                </button>
+            </div>
+
+            {/* Desktop Leads Table */}
+            <div className="hidden md:block bg-white dark:bg-[#11224d]/80 backdrop-blur-sm rounded-xl border border-slate-200 dark:border-white/5 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                         <thead>
@@ -209,13 +238,73 @@ export default function LeadsView() {
                 </div>
 
                 {/* Footer / Pagination (Mock) */}
-                <div className="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+                <div className="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-slate-300">
                     <div className="font-medium">Showing {filteredLeads.length} leads</div>
                     <div className="flex gap-2">
                         <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 font-semibold transition-colors">Previous</button>
                         <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 font-semibold transition-colors">Next</button>
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile Leads List */}
+            <div className="md:hidden space-y-4 pb-20">
+                {filteredLeads.length === 0 ? (
+                    <div className="text-center py-20 text-slate-400 uppercase tracking-widest text-xs font-bold">
+                        No leads found
+                    </div>
+                ) : (
+                    filteredLeads.map((lead) => (
+                        <div key={lead.id} className="bg-white dark:bg-[#11224d] rounded-3xl p-5 border border-slate-100 dark:border-white/5 shadow-sm space-y-5">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-lg font-black shadow-sm">
+                                        {lead.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-[#0c1d56] dark:text-white tracking-tight">{lead.name}</h3>
+                                        <div className="flex items-center gap-1.5 mt-0.5">
+                                            <span className={`w-1.5 h-1.5 rounded-full ${lead.call_status === 'converted' ? 'bg-emerald-500' : lead.call_status === 'scheduled' ? 'bg-blue-500' : 'bg-slate-400'}`}></span>
+                                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                                {lead.call_status}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                    <button
+                                        onClick={() => setEditingLead(lead)}
+                                        className="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-100 dark:border-indigo-500/20"
+                                    >
+                                        Edit
+                                    </button>
+                                    <button
+                                        onClick={() => setDeletingLeadId(lead.id)}
+                                        className="px-3 py-1.5 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg border border-rose-100 dark:border-rose-500/20"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="flex flex-row gap-2">
+                                <div className="flex-1 flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 p-2.5 rounded-xl border border-slate-100 dark:border-white/5">
+                                    <span className="text-[11px] font-bold tracking-tight">{lead.phone_number}</span>
+                                </div>
+                                <div className="flex-1 flex items-center justify-center gap-1.5 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-white/5 p-2.5 rounded-xl border border-slate-100 dark:border-white/5 overflow-hidden">
+                                    <span className="text-[11px] font-bold tracking-tight truncate">{lead.email || "No Email"}</span>
+                                </div>
+                            </div>
+
+                            <Link
+                                href={`/leads/${lead.id}`}
+                                className="w-[70%] mx-auto flex items-center justify-center gap-2 bg-[#0c1d56] text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md shadow-indigo-900/10"
+                            >
+                                View Detail
+                            </Link>
+                        </div>
+                    ))
+                )}
             </div>
 
             {/* Create Lead Modal */}
