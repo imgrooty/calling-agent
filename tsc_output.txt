@@ -1,0 +1,16 @@
+﻿.next/dev/types/validator.ts(126,31): error TS2344: Type 'typeof import("D:/fagoon_ai/calling-agent/app/api/leads/28leadId29/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/leads/28leadId29">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: Request, { params }: { params: Promise<{ leadId: string; }>; }) => Promise<NextResponse<any>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{}>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{}>; }' is not assignable to type '{ params: Promise<{ leadId: string; }>; }'.
+          Types of property 'params' are incompatible.
+            Type 'Promise<{}>' is not assignable to type 'Promise<{ leadId: string; }>'.
+              Property 'leadId' is missing in type '{}' but required in type '{ leadId: string; }'.
+.next/types/validator.ts(126,31): error TS2344: Type 'typeof import("D:/fagoon_ai/calling-agent/app/api/leads/28leadId29/route")' does not satisfy the constraint 'RouteHandlerConfig<"/api/leads/28leadId29">'.
+  Types of property 'GET' are incompatible.
+    Type '(request: Request, { params }: { params: Promise<{ leadId: string; }>; }) => Promise<NextResponse<any>>' is not assignable to type '(request: NextRequest, context: { params: Promise<{}>; }) => void | Response | Promise<void | Response>'.
+      Types of parameters '__1' and 'context' are incompatible.
+        Type '{ params: Promise<{}>; }' is not assignable to type '{ params: Promise<{ leadId: string; }>; }'.
+          Types of property 'params' are incompatible.
+            Type 'Promise<{}>' is not assignable to type 'Promise<{ leadId: string; }>'.
+              Property 'leadId' is missing in type '{}' but required in type '{ leadId: string; }'.

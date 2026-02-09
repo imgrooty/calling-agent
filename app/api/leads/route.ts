@@ -4,11 +4,12 @@ import { cookies } from "next/headers";
 
 export async function GET() {
     try {
-        console.log("Stats API /api/stats hit");
+        console.log("Leads API /api/leads hit");
         const cookieStore = await cookies();
         const token = cookieStore.get("auth_token")?.value;
-        const url = `${API_BASE_URL}/api/v1/org-stats`;
-        console.log("Fetching backend URL:", url);
+
+        const url = `${API_BASE_URL}/api/v1/leads`;
+        console.log("Fetching backend leads URL:", url);
 
         const response = await fetch(url, {
             headers: {
@@ -16,13 +17,12 @@ export async function GET() {
                 "Accept": "application/json",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             },
-            // Prevent caching for real-time stats
             cache: 'no-store'
         });
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error("Backend Error Details:", errorText);
+            console.error("Backend Leads Error Details:", errorText);
             return NextResponse.json(
                 { message: `Backend error: ${response.statusText}` },
                 { status: response.status }
