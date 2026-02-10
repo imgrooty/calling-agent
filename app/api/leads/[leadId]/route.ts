@@ -16,7 +16,6 @@ export async function GET(
         const [detailsRes, leadRes] = await Promise.all([
             fetch(`${API_BASE_URL}/api/v1/details/${leadId}`, {
                 headers: {
-                    "ngrok-skip-browser-warning": "true",
                     "Accept": "application/json",
                     ...(token ? { "Authorization": `Bearer ${token}` } : {}),
                 },
@@ -24,7 +23,6 @@ export async function GET(
             }),
             fetch(`${API_BASE_URL}/api/v1/leads/${leadId}`, {
                 headers: {
-                    "ngrok-skip-browser-warning": "true",
                     "Accept": "application/json",
                     ...(token ? { "Authorization": `Bearer ${token}` } : {}),
                 },
@@ -32,12 +30,19 @@ export async function GET(
             })
         ]);
 
-        if (!detailsRes.ok) {
+        let detailsData = { details: [], total: 0, page: 1 };
+
+        if (detailsRes.ok) {
+            detailsData = await detailsRes.json();
+            if (detailsData.details && Array.isArray(detailsData.details)) {
+                detailsData.details.sort((a: any, b: any) =>
+                    new Date(b.call_start_time).getTime() - new Date(a.call_start_time).getTime()
+                );
+            }
+        } else if (detailsRes.status !== 404) {
             const errorText = await detailsRes.text();
             return NextResponse.json({ message: `Backend details error: ${detailsRes.statusText}` }, { status: detailsRes.status });
         }
-
-        const detailsData = await detailsRes.json();
         let leadData = null;
 
         if (leadRes.ok) {

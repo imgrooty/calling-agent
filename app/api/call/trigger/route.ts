@@ -12,7 +12,6 @@ export async function POST(request: Request) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "ngrok-skip-browser-warning": "true",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             },
             body: JSON.stringify(body),

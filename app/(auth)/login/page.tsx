@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/constants";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/shared/AuthProvider";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -14,12 +15,29 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { login } = useAuth(); // Fixed: this must be outside handleLogin
     const router = useRouter();
+
+    const validateEmail = (email: string) => {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsLoading(true);
         setError(null);
+
+        // Validation
+        if (!validateEmail(email)) {
+            setError("Please enter a valid email address.");
+            return;
+        }
+
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters long.");
+            return;
+        }
+
+        setIsLoading(true);
 
         try {
             const response = await fetch("/api/auth/login", {
@@ -33,6 +51,12 @@ export default function LoginPage() {
             if (!response.ok) {
                 throw new Error(data.message || "Login failed");
             }
+
+            // Store user data in AuthProvider, merging backend data if available
+            login({
+                email,
+                ...(data.user || {})
+            });
 
             // Success - redirect to dashboard
             router.push("/dashboard");

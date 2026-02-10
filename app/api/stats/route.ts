@@ -12,7 +12,6 @@ export async function GET() {
 
         const response = await fetch(url, {
             headers: {
-                "ngrok-skip-browser-warning": "true",
                 "Accept": "application/json",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {}),
             },

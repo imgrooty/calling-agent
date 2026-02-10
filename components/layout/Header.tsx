@@ -4,6 +4,7 @@ import { Bell, ChevronDown, Menu, Moon, Sun, ArrowLeft, LogOut } from "lucide-re
 import { useTheme } from "@/components/shared/ThemeProvider";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import { useAuth } from "@/components/shared/AuthProvider";
 
 interface HeaderProps {
     onMenuClick: () => void;
@@ -12,31 +13,19 @@ interface HeaderProps {
 
 export default function Header({ onMenuClick, activeView }: HeaderProps) {
     const { theme, toggleTheme } = useTheme();
+    const { user, logout } = useAuth();
     const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsProfileOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    // Initial letters for avatar
+    const getInitials = (name: string) => {
+        if (!name) return "U";
+        return name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2);
+    };
 
     const handleLogout = async () => {
-        try {
-            const response = await fetch("/api/auth/logout", { method: "POST" });
-            if (response.ok) {
-                router.push("/login");
-            } else {
-                console.error("Logout failed");
-            }
-        } catch (error) {
-            console.error("Logout error:", error);
-        }
+        await logout();
     };
 
     return (
@@ -73,12 +62,12 @@ export default function Header({ onMenuClick, activeView }: HeaderProps) {
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className="flex items-center gap-3 pl-1 cursor-pointer group"
                     >
-                        <div className="w-8 h-8 bg-gradient-to-tr from-[#0c1d56] to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white dark:ring-white/10 group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all">
-                            AS
+                        <div className="w-8 h-8 bg-gradient-to-tr from-[#0c1d56] to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md ring-2 ring-white dark:ring-white/10 group-hover:ring-indigo-100 dark:group-hover:ring-indigo-900 transition-all uppercase">
+                            {user?.name ? getInitials(user.name) : user?.email ? user.email[0].toUpperCase() : "U"}
                         </div>
                         <div className="text-sm">
-                            <p className="font-semibold text-[#0c1d56] dark:text-white leading-none">Ashish Sah</p>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Admin</p>
+                            <p className="font-semibold text-[#0c1d56] dark:text-white leading-none capitalize">{user?.name || user?.email?.split('@')[0] || "User"}</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 capitalize">{user?.role || "Admin"}</p>
                         </div>
                         <ChevronDown size={14} className={`text-slate-400 dark:text-slate-500 group-hover:text-[#0c1d56] dark:group-hover:text-white transition-all ${isProfileOpen ? 'rotate-180' : ''}`} />
                     </div>
@@ -88,8 +77,8 @@ export default function Header({ onMenuClick, activeView }: HeaderProps) {
                         <div className="absolute right-0 mt-3 w-56 bg-white dark:bg-[#0c1d56] rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-50">
                             <div className="px-4 py-3 border-b border-slate-50 dark:border-white/5 bg-slate-50/50 dark:bg-white/5">
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-loose">Account</p>
-                                <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1">Ashish Sah</p>
-                                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">ashish@fagoon.com</p>
+                                <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1 capitalize">{user?.name || user?.email?.split('@')[0] || "User"}</p>
+                                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.email || "No email"}</p>
                             </div>
 
                             <div className="p-2">

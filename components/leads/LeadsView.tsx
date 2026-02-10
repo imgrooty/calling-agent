@@ -1,9 +1,291 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Loader2, MapPin, Phone, Mail, Calendar, User, Eye, Plus, X, UserPlus, CheckCircle, AlertCircle, Edit3, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Loader2, MapPin, Phone, Mail, Calendar, User, Eye, Plus, X, UserPlus, CheckCircle, AlertCircle, Edit3, Trash2, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { Globe } from "lucide-react";
+
+const COUNTRY_CODES = [
+    { code: "+93", country: "Afghanistan", flag: "🇦🇫" },
+    { code: "+355", country: "Albania", flag: "🇦🇱" },
+    { code: "+213", country: "Algeria", flag: "🇩🇿" },
+    { code: "+1-684", country: "American Samoa", flag: "🇦🇸" },
+    { code: "+376", country: "Andorra", flag: "🇦🇩" },
+    { code: "+244", country: "Angola", flag: "🇦🇴" },
+    { code: "+1-264", country: "Anguilla", flag: "🇦🇮" },
+    { code: "+1-268", country: "Antigua & Barbuda", flag: "🇦🇬" },
+    { code: "+54", country: "Argentina", flag: "🇦🇷" },
+    { code: "+374", country: "Armenia", flag: "🇦🇲" },
+    { code: "+297", country: "Aruba", flag: "🇦🇼" },
+    { code: "+61", country: "Australia", flag: "🇦🇺" },
+    { code: "+43", country: "Austria", flag: "🇦🇹" },
+    { code: "+994", country: "Azerbaijan", flag: "🇦🇿" },
+    { code: "+1-242", country: "Bahamas", flag: "🇧🇸" },
+    { code: "+973", country: "Bahrain", flag: "🇧🇭" },
+    { code: "+880", country: "Bangladesh", flag: "🇧🇩" },
+    { code: "+1-246", country: "Barbados", flag: "🇧🇧" },
+    { code: "+375", country: "Belarus", flag: "🇧🇾" },
+    { code: "+32", country: "Belgium", flag: "🇧🇪" },
+    { code: "+501", country: "Belize", flag: "🇧🇿" },
+    { code: "+229", country: "Benin", flag: "🇧🇯" },
+    { code: "+1-441", country: "Bermuda", flag: "🇧🇲" },
+    { code: "+975", country: "Bhutan", flag: "🇧🇹" },
+    { code: "+591", country: "Bolivia", flag: "🇧🇴" },
+    { code: "+387", country: "Bosnia & Herzegovina", flag: "🇧🇦" },
+    { code: "+267", country: "Botswana", flag: "🇧🇼" },
+    { code: "+55", country: "Brazil", flag: "🇧🇷" },
+    { code: "+673", country: "Brunei", flag: "🇧🇳" },
+    { code: "+359", country: "Bulgaria", flag: "🇧🇬" },
+    { code: "+226", country: "Burkina Faso", flag: "🇧🇫" },
+    { code: "+257", country: "Burundi", flag: "🇧🇮" },
+    { code: "+855", country: "Cambodia", flag: "🇰🇭" },
+    { code: "+237", country: "Cameroon", flag: "🇨🇲" },
+    { code: "+1", country: "Canada", flag: "🇨🇦" },
+    { code: "+238", country: "Cape Verde", flag: "🇨🇻" },
+    { code: "+1-345", country: "Cayman Islands", flag: "🇰🇾" },
+    { code: "+236", country: "Central African Republic", flag: "🇨🇫" },
+    { code: "+235", country: "Chad", flag: "🇹🇩" },
+    { code: "+56", country: "Chile", flag: "🇨🇱" },
+    { code: "+86", country: "China", flag: "🇨🇳" },
+    { code: "+57", country: "Colombia", flag: "🇨🇴" },
+    { code: "+269", country: "Comoros", flag: "🇰🇲" },
+    { code: "+682", country: "Cook Islands", flag: "🇨🇰" },
+    { code: "+506", country: "Costa Rica", flag: "🇨🇷" },
+    { code: "+385", country: "Croatia", flag: "🇭🇷" },
+    { code: "+53", country: "Cuba", flag: "🇨🇺" },
+    { code: "+357", country: "Cyprus", flag: "🇨🇾" },
+    { code: "+420", country: "Czechia", flag: "🇨🇿" },
+    { code: "+243", country: "Dem. Rep. Congo", flag: "🇨🇩" },
+    { code: "+45", country: "Denmark", flag: "🇩🇰" },
+    { code: "+253", country: "Djibouti", flag: "🇩🇯" },
+    { code: "+1-767", country: "Dominica", flag: "🇩🇲" },
+    { code: "+1-809", country: "Dominican Republic", flag: "🇩🇴" },
+    { code: "+593", country: "Ecuador", flag: "🇪🇨" },
+    { code: "+20", country: "Egypt", flag: "🇪🇬" },
+    { code: "+503", country: "El Salvador", flag: "🇸🇻" },
+    { code: "+240", country: "Equatorial Guinea", flag: "🇬🇶" },
+    { code: "+291", country: "Eritrea", flag: "🇪🇷" },
+    { code: "+372", country: "Estonia", flag: "🇪🇪" },
+    { code: "+268", country: "Eswatini", flag: "🇸🇿" },
+    { code: "+251", country: "Ethiopia", flag: "🇪🇹" },
+    { code: "+679", country: "Fiji", flag: "🇫🇯" },
+    { code: "+358", country: "Finland", flag: "🇫🇮" },
+    { code: "+33", country: "France", flag: "🇫🇷" },
+    { code: "+241", country: "Gabon", flag: "🇬🇦" },
+    { code: "+220", country: "Gambia", flag: "🇬🇲" },
+    { code: "+995", country: "Georgia", flag: "🇬🇪" },
+    { code: "+49", country: "Germany", flag: "🇩🇪" },
+    { code: "+233", country: "Ghana", flag: "🇬🇭" },
+    { code: "+350", country: "Gibraltar", flag: "🇬🇮" },
+    { code: "+30", country: "Greece", flag: "🇬🇷" },
+    { code: "+299", country: "Greenland", flag: "🇬🇱" },
+    { code: "+1-473", country: "Grenada", flag: "🇬🇩" },
+    { code: "+1-671", country: "Guam", flag: "🇬🇺" },
+    { code: "+502", country: "Guatemala", flag: "🇬🇹" },
+    { code: "+224", country: "Guinea", flag: "🇬🇳" },
+    { code: "+245", country: "Guinea-Bissau", flag: "🇬🇼" },
+    { code: "+592", country: "Guyana", flag: "🇬🇾" },
+    { code: "+509", country: "Haiti", flag: "🇭🇹" },
+    { code: "+504", country: "Honduras", flag: "🇭🇳" },
+    { code: "+852", country: "Hong Kong", flag: "🇭🇰" },
+    { code: "+36", country: "Hungary", flag: "🇭🇺" },
+    { code: "+354", country: "Iceland", flag: "🇮🇸" },
+    { code: "+91", country: "India", flag: "🇮🇳" },
+    { code: "+62", country: "Indonesia", flag: "🇮🇩" },
+    { code: "+98", country: "Iran", flag: "🇮🇷" },
+    { code: "+964", country: "Iraq", flag: "🇮🇶" },
+    { code: "+353", country: "Ireland", flag: "🇮🇪" },
+    { code: "+972", country: "Israel", flag: "🇮🇱" },
+    { code: "+39", country: "Italy", flag: "🇮🇹" },
+    { code: "+1-876", country: "Jamaica", flag: "🇯🇲" },
+    { code: "+81", country: "Japan", flag: "🇯🇵" },
+    { code: "+962", country: "Jordan", flag: "🇯🇴" },
+    { code: "+7", country: "Kazakhstan", flag: "🇰🇿" },
+    { code: "+254", country: "Kenya", flag: "🇰🇪" },
+    { code: "+686", country: "Kiribati", flag: "🇰🇮" },
+    { code: "+965", country: "Kuwait", flag: "🇰🇼" },
+    { code: "+996", country: "Kyrgyzstan", flag: "🇰🇬" },
+    { code: "+856", country: "Laos", flag: "🇱🇦" },
+    { code: "+371", country: "Latvia", flag: "🇱🇻" },
+    { code: "+961", country: "Lebanon", flag: "🇱🇧" },
+    { code: "+266", country: "Lesotho", flag: "🇱🇸" },
+    { code: "+231", country: "Liberia", flag: "🇱🇷" },
+    { code: "+218", country: "Libya", flag: "🇱🇾" },
+    { code: "+423", country: "Liechtenstein", flag: "🇱🇮" },
+    { code: "+370", country: "Lithuania", flag: "🇱🇹" },
+    { code: "+352", country: "Luxembourg", flag: "🇱🇺" },
+    { code: "+853", country: "Macau", flag: "🇲🇴" },
+    { code: "+261", country: "Madagascar", flag: "🇲🇬" },
+    { code: "+265", country: "Malawi", flag: "🇲🇼" },
+    { code: "+60", country: "Malaysia", flag: "🇲🇾" },
+    { code: "+960", country: "Maldives", flag: "🇲🇻" },
+    { code: "+223", country: "Mali", flag: "🇲🇱" },
+    { code: "+356", country: "Malta", flag: "🇲🇹" },
+    { code: "+692", country: "Marshall Islands", flag: "🇲🇭" },
+    { code: "+222", country: "Mauritania", flag: "🇲🇷" },
+    { code: "+230", country: "Mauritius", flag: "🇲🇺" },
+    { code: "+52", country: "Mexico", flag: "🇲🇽" },
+    { code: "+691", country: "Micronesia", flag: "🇫🇲" },
+    { code: "+373", country: "Moldova", flag: "🇲🇩" },
+    { code: "+377", country: "Monaco", flag: "🇲🇨" },
+    { code: "+976", country: "Mongolia", flag: "🇲🇳" },
+    { code: "+382", country: "Montenegro", flag: "🇲🇪" },
+    { code: "+1-664", country: "Montserrat", flag: "🇲🇸" },
+    { code: "+212", country: "Morocco", flag: "🇲🇦" },
+    { code: "+258", country: "Mozambique", flag: "🇲🇿" },
+    { code: "+95", country: "Myanmar", flag: "🇲🇲" },
+    { code: "+264", country: "Namibia", flag: "🇳🇦" },
+    { code: "+674", country: "Nauru", flag: "🇳🇷" },
+    { code: "+977", country: "Nepal", flag: "🇳🇵" },
+    { code: "+31", country: "Netherlands", flag: "🇳🇱" },
+    { code: "+687", country: "New Caledonia", flag: "🇳🇨" },
+    { code: "+64", country: "New Zealand", flag: "🇳🇿" },
+    { code: "+505", country: "Nicaragua", flag: "🇳🇮" },
+    { code: "+227", country: "Niger", flag: "🇳🇪" },
+    { code: "+234", country: "Nigeria", flag: "🇳🇬" },
+    { code: "+683", country: "Niue", flag: "🇳🇺" },
+    { code: "+850", country: "North Korea", flag: "🇰🇵" },
+    { code: "+389", country: "North Macedonia", flag: "🇲🇰" },
+    { code: "+47", country: "Norway", flag: "🇳🇴" },
+    { code: "+968", country: "Oman", flag: "🇴🇲" },
+    { code: "+92", country: "Pakistan", flag: "🇵🇰" },
+    { code: "+680", country: "Palau", flag: "🇵🇼" },
+    { code: "+970", country: "Palestine", flag: "🇵🇸" },
+    { code: "+507", country: "Panama", flag: "🇵🇦" },
+    { code: "+675", country: "Papua New Guinea", flag: "🇵🇬" },
+    { code: "+595", country: "Paraguay", flag: "🇵🇾" },
+    { code: "+51", country: "Peru", flag: "🇵🇪" },
+    { code: "+63", country: "Philippines", flag: "🇵🇭" },
+    { code: "+48", country: "Poland", flag: "🇵🇱" },
+    { code: "+351", country: "Portugal", flag: "🇵🇹" },
+    { code: "+1-787", country: "Puerto Rico", flag: "🇵🇷" },
+    { code: "+974", country: "Qatar", flag: "🇶🇦" },
+    { code: "+40", country: "Romania", flag: "🇷🇴" },
+    { code: "+7", country: "Russia", flag: "🇷🇺" },
+    { code: "+250", country: "Rwanda", flag: "🇷🇼" },
+    { code: "+685", country: "Samoa", flag: "🇼🇸" },
+    { code: "+378", country: "San Marino", flag: "🇸🇲" },
+    { code: "+239", country: "São Tomé & Príncipe", flag: "🇸🇹" },
+    { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+    { code: "+221", country: "Senegal", flag: "🇸🇳" },
+    { code: "+381", country: "Serbia", flag: "🇷🇸" },
+    { code: "+248", country: "Seychelles", flag: "🇸🇨" },
+    { code: "+232", country: "Sierra Leone", flag: "🇸🇱" },
+    { code: "+65", country: "Singapore", flag: "🇸🇬" },
+    { code: "+421", country: "Slovakia", flag: "🇸🇰" },
+    { code: "+386", country: "Slovenia", flag: "🇸🇮" },
+    { code: "+677", country: "Solomon Islands", flag: "🇸🇧" },
+    { code: "+252", country: "Somalia", flag: "🇸🇴" },
+    { code: "+27", country: "South Africa", flag: "🇿🇦" },
+    { code: "+82", country: "South Korea", flag: "🇰🇷" },
+    { code: "+211", country: "South Sudan", flag: "🇸🇸" },
+    { code: "+34", country: "Spain", flag: "🇪🇸" },
+    { code: "+94", country: "Sri Lanka", flag: "🇱🇰" },
+    { code: "+249", country: "Sudan", flag: "🇸🇩" },
+    { code: "+597", country: "Suriname", flag: "🇸🇷" },
+    { code: "+46", country: "Sweden", flag: "🇸🇪" },
+    { code: "+41", country: "Switzerland", flag: "🇨🇭" },
+    { code: "+963", country: "Syria", flag: "🇸🇾" },
+    { code: "+886", country: "Taiwan", flag: "🇹🇼" },
+    { code: "+992", country: "Tajikistan", flag: "🇹🇯" },
+    { code: "+255", country: "Tanzania", flag: "🇹🇿" },
+    { code: "+66", country: "Thailand", flag: "🇹🇭" },
+    { code: "+670", country: "Timor-Leste", flag: "🇹🇱" },
+    { code: "+228", country: "Togo", flag: "🇹🇬" },
+    { code: "+676", country: "Tonga", flag: "🇹🇴" },
+    { code: "+1-868", country: "Trinidad & Tobago", flag: "🇹🇹" },
+    { code: "+216", country: "Tunisia", flag: "🇹🇳" },
+    { code: "+90", country: "Turkey", flag: "🇹🇷" },
+    { code: "+993", country: "Turkmenistan", flag: "🇹🇲" },
+    { code: "+688", country: "Tuvalu", flag: "🇹🇻" },
+    { code: "+256", country: "Uganda", flag: "🇺🇬" },
+    { code: "+380", country: "Ukraine", flag: "🇺🇦" },
+    { code: "+971", country: "UAE", flag: "🇦🇪" },
+    { code: "+44", country: "UK", flag: "🇬🇧" },
+    { code: "+1", country: "USA", flag: "🇺🇸" },
+    { code: "+598", country: "Uruguay", flag: "🇺🇾" },
+    { code: "+998", country: "Uzbekistan", flag: "🇺🇿" },
+    { code: "+678", country: "Vanuatu", flag: "🇻🇺" },
+    { code: "+58", country: "Venezuela", flag: "🇻🇪" },
+    { code: "+84", country: "Vietnam", flag: "🇻🇳" },
+    { code: "+967", country: "Yemen", flag: "🇾🇪" },
+    { code: "+260", country: "Zambia", flag: "🇿🇲" },
+    { code: "+263", country: "Zimbabwe", flag: "🇿🇼" },
+];
+
+function CountrySelector({ selectedCode, onChange, className = "" }: { selectedCode: string, onChange: (code: string) => void, className?: string }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const selected = COUNTRY_CODES.find(c => selectedCode.startsWith(c.code)) || COUNTRY_CODES.find(c => c.code === "+977") || COUNTRY_CODES[0];
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full h-full flex items-center justify-between gap-2 px-3 py-3 bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl hover:border-indigo-500 transition-all outline-none min-w-[90px]"
+            >
+                <div className="flex items-center gap-1.5">
+                    <span className="text-base leading-none">{selected?.flag}</span>
+                    <span className="text-[13px] font-bold dark:text-white">{selected?.code}</span>
+                </div>
+                <ChevronDown size={14} className={"text-slate-400 transition-transform shrink-0 " + (isOpen ? "rotate-180" : "")} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="absolute z-[100] left-0 mt-2 w-56 md:w-64 bg-white dark:bg-[#0c1d56] border border-slate-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden"
+                    >
+                        <div className="max-h-56 overflow-y-auto custom-scrollbar p-1">
+                            {COUNTRY_CODES.map((c) => (
+                                <button
+                                    key={c.country + "-" + c.code}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(c.code);
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors text-left"
+                                >
+                                    <span className="text-base leading-none shrink-0">{c.flag}</span>
+                                    <div className="flex items-center justify-between w-full">
+                                        <span className="text-[13px] font-bold text-[#0c1d56] dark:text-white">{c.code}</span>
+                                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-[100px]">{c.country}</span>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+}
+
+
+const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+const validateName = (name: string) => {
+    const parts = name.trim().split(/\s+/);
+    return parts.length >= 2;
+};
 
 interface Lead {
     id: string;
@@ -98,8 +380,8 @@ export default function LeadsView() {
             {/* Desktop Header / Actions */}
             <div className="hidden md:flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold text-[#0c1d56] dark:text-white">Leads Store</h2>
-                    <p className="text-slate-500 dark:text-slate-400">Manage and track your potential clients</p>
+                    <h2 className="text-2xl font-semibold text-black dark:text-white">Leads Store</h2>
+                    <p className="text-black dark:text-slate-400">Manage and track your potential clients</p>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -116,7 +398,7 @@ export default function LeadsView() {
 
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0c1d56] dark:bg-indigo-600 text-white rounded-lg text-sm font-bold hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg w-full sm:w-auto active:scale-95"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0c1d56] dark:bg-indigo-600 text-white rounded-lg text-[15px] font-semibold hover:bg-slate-800 dark:hover:bg-indigo-500 transition-all shadow-md hover:shadow-lg w-full sm:w-auto active:scale-95"
                     >
                         <UserPlus size={18} />
                         Add Lead
@@ -159,11 +441,11 @@ export default function LeadsView() {
                     <table className="w-full text-left border-collapse">
                         <thead>
                             <tr className="bg-slate-50/50 dark:bg-white/5 border-b border-slate-200/60 dark:border-white/10">
-                                <th className="px-6 py-4 text-[11px] font-bold text-[#0c1d56] dark:text-slate-300 uppercase tracking-wider">Name</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-[#0c1d56] dark:text-slate-300 uppercase tracking-wider">Contact</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-[#0c1d56] dark:text-slate-300 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-[#0c1d56] dark:text-slate-300 uppercase tracking-wider">Email Address</th>
-                                <th className="px-6 py-4 text-[11px] font-bold text-[#0c1d56] dark:text-slate-300 uppercase tracking-wider text-right">Actions</th>
+                                <th className="px-6 py-4 text-[14px] font-semibold text-black dark:text-slate-300 uppercase tracking-wider">Name</th>
+                                <th className="px-6 py-4 text-[14px] font-semibold text-black dark:text-slate-300 uppercase tracking-wider">Contact</th>
+                                <th className="px-6 py-4 text-[14px] font-semibold text-black dark:text-slate-300 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-4 text-[14px] font-semibold text-black dark:text-slate-300 uppercase tracking-wider">Email Address</th>
+                                <th className="px-6 py-4 text-[14px] font-semibold text-black dark:text-slate-300 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -181,12 +463,12 @@ export default function LeadsView() {
                                                 <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
                                                     {lead.name.charAt(0)}
                                                 </div>
-                                                <div className="font-semibold text-[#0c1d56] dark:text-white">{lead.name}</div>
+                                                <div className="font-normal text-[16px] text-black dark:text-white">{lead.name}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex flex-col gap-1">
-                                                <div className="flex items-center gap-1.5 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                                                <div className="flex items-center gap-1.5 text-[15px] text-black dark:text-slate-300 font-normal">
                                                     <Phone className="w-3.5 h-3.5 text-slate-400" />
                                                     {lead.phone_number}
                                                 </div>
@@ -203,13 +485,13 @@ export default function LeadsView() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400">
-                                            <div className="flex items-center gap-1.5 font-medium">
+                                            <div className="flex items-center gap-1.5 font-normal text-black text-[15px]">
                                                 <Mail className="w-3.5 h-3.5 text-slate-400" />
                                                 {lead.email || "N/A"}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <div className="flex items-center justify-end gap-2 text-[10px] font-bold uppercase tracking-wider">
+                                            <div className="flex items-center justify-end gap-2 text-[13px] font-semibold">
                                                 <Link
                                                     href={`/leads/${lead.id}`}
                                                     className="px-3 py-1.5 bg-slate-50 hover:bg-[#0c1d56] dark:bg-white/5 dark:hover:bg-white text-[#0c1d56] hover:text-white dark:text-white dark:hover:text-[#0c1d56] border border-slate-200 dark:border-white/10 rounded-lg transition-all"
@@ -239,10 +521,10 @@ export default function LeadsView() {
 
                 {/* Footer / Pagination (Mock) */}
                 <div className="px-6 py-4 bg-slate-50/50 dark:bg-white/5 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-slate-300">
-                    <div className="font-medium">Showing {filteredLeads.length} leads</div>
+                    <div className="font-semibold text-black">Showing {filteredLeads.length} leads</div>
                     <div className="flex gap-2">
-                        <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 font-semibold transition-colors">Previous</button>
-                        <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 font-semibold transition-colors">Next</button>
+                        <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 text-[13px] font-semibold transition-colors">Previous</button>
+                        <button disabled className="px-3 py-1.5 border border-slate-200 dark:border-white/10 rounded-lg bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50 text-[13px] font-semibold transition-colors">Next</button>
                     </div>
                 </div>
             </div>
@@ -399,7 +681,7 @@ function EditLeadModal({ isOpen, lead, onClose, onSuccess }: {
     });
 
     useEffect(() => {
-        if (lead) {
+        if (lead && isOpen) {
             setFormData({
                 name: lead.name,
                 phone_number: lead.phone_number,
@@ -408,8 +690,9 @@ function EditLeadModal({ isOpen, lead, onClose, onSuccess }: {
                 call_status: lead.call_status,
                 geographical_direction: lead.geographical_direction
             });
+            setSubmitError(null);
         }
-    }, [lead]);
+    }, [lead, isOpen]);
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -423,8 +706,21 @@ function EditLeadModal({ isOpen, lead, onClose, onSuccess }: {
         if (!lead) return;
 
         try {
-            setIsSubmitting(true);
             setSubmitError(null);
+
+            if (!formData.name) {
+                throw new Error("Name is required.");
+            }
+
+            if (!validateName(formData.name)) {
+                throw new Error("Please enter both first and last name.");
+            }
+
+            if (formData.email && !validateEmail(formData.email)) {
+                throw new Error("Please enter a valid email address.");
+            }
+
+            setIsSubmitting(true);
 
             const response = await fetch(`/api/leads/${lead.id}`, {
                 method: "PUT",
@@ -506,15 +802,26 @@ function EditLeadModal({ isOpen, lead, onClose, onSuccess }: {
 
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-0.5">Contact Number</label>
-                                    <div className="relative group/input">
-                                        <input
-                                            type="tel"
-                                            required
-                                            value={formData.phone_number}
-                                            onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:text-white text-sm font-semibold"
+                                    <div className="flex gap-2">
+                                        <CountrySelector
+                                            selectedCode={formData.phone_number}
+                                            onChange={(code) => {
+                                                if (!formData.phone_number.startsWith(code)) {
+                                                    const currentNumber = formData.phone_number.replace(/^\+\d+(- \d+)*\s*/, "");
+                                                    setFormData(prev => ({ ...prev, phone_number: `${code} ${currentNumber}` }));
+                                                }
+                                            }}
                                         />
-                                        <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/input:text-indigo-500 transition-colors pointer-events-none" size={16} />
+                                        <div className="relative flex-1 group/input">
+                                            <input
+                                                type="tel"
+                                                required
+                                                value={formData.phone_number}
+                                                onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:text-white text-sm font-semibold"
+                                            />
+                                            <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/input:text-indigo-500 transition-colors pointer-events-none" size={16} />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -632,12 +939,21 @@ function CreateLeadModal({ isOpen, onClose, onSuccess }: {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            setIsSubmitting(true);
             setSubmitError(null);
 
             if (!lead.name || !lead.phone_number) {
                 throw new Error("Name and Phone Number are required.");
             }
+
+            if (!validateName(lead.name)) {
+                throw new Error("Please enter both first and last name.");
+            }
+
+            if (lead.email && !validateEmail(lead.email)) {
+                throw new Error("Please enter a valid email address.");
+            }
+
+            setIsSubmitting(true);
 
             const response = await fetch('/api/leads/create', {
                 method: "POST",
@@ -701,7 +1017,7 @@ function CreateLeadModal({ isOpen, onClose, onSuccess }: {
                             </button>
                         </div>
 
-                        {/* Modal Body - Single Column and Compact */}
+                        {/* Modal Body */}
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="space-y-5">
                                 <div className="space-y-1.5">
@@ -721,16 +1037,27 @@ function CreateLeadModal({ isOpen, onClose, onSuccess }: {
 
                                 <div className="space-y-1.5">
                                     <label className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-0.5">Contact Number</label>
-                                    <div className="relative group/input">
-                                        <input
-                                            type="tel"
-                                            required
-                                            placeholder="e.g. +977 9865..."
-                                            value={lead.phone_number}
-                                            onChange={(e) => handleInputChange('phone_number', e.target.value)}
-                                            className="w-full px-4 py-3 bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:text-white text-sm font-semibold placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                    <div className="flex gap-2">
+                                        <CountrySelector
+                                            selectedCode={lead.phone_number}
+                                            onChange={(code) => {
+                                                if (!lead.phone_number.startsWith(code)) {
+                                                    const currentNumber = lead.phone_number.replace(/^\+\d+(- \d+)*\s*/, "");
+                                                    setLead(prev => ({ ...prev, phone_number: `${code} ${currentNumber}` }));
+                                                }
+                                            }}
                                         />
-                                        <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/input:text-indigo-500 transition-colors pointer-events-none" size={16} />
+                                        <div className="relative flex-1 group/input">
+                                            <input
+                                                type="tel"
+                                                required
+                                                placeholder="e.g. 9865..."
+                                                value={lead.phone_number}
+                                                onChange={(e) => handleInputChange('phone_number', e.target.value)}
+                                                className="w-full px-4 py-3 bg-slate-50/50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all dark:text-white text-sm font-semibold placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                                            />
+                                            <Phone className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within/input:text-indigo-500 transition-colors pointer-events-none" size={16} />
+                                        </div>
                                     </div>
                                 </div>
 

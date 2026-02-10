@@ -14,7 +14,6 @@ export async function POST() {
                     method: "POST",
                     headers: {
                         "Authorization": `Bearer ${token}`,
-                        "ngrok-skip-browser-warning": "true",
                     },
                 });
             } catch (backendError) {

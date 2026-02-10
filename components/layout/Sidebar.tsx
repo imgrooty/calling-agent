@@ -21,7 +21,7 @@ export const Sidebar = ({ isMobileOpen, closeMobile }: SidebarProps) => {
                     <div className="w-9 h-9 bg-[#0c1d56] dark:bg-white rounded-xl flex items-center justify-center transition-colors shadow-sm">
                         <Phone className="w-5 h-5 text-white dark:text-[#0c1d56]" />
                     </div>
-                    <span className="text-lg font-bold text-[#0c1d56] dark:text-white tracking-tight">CallAgent API</span>
+                    <span className="text-lg font-bold text-[#0c1d56] dark:text-white tracking-tight">CallingAgent.AI</span>
                 </Link>
             </div>
 
@@ -98,7 +98,7 @@ function NavItem({ icon, label, href, active = false, badge, onClick }: NavItemP
         <Link
             href={href}
             onClick={onClick}
-            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 text-sm font-medium group relative overflow-hidden ${active
+            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl transition-all duration-200 text-base font-semibold group relative overflow-hidden ${active
                 ? 'bg-[#0c1d56] text-white shadow-md shadow-[#0c1d56]/20 dark:bg-white dark:text-[#0c1d56]'
                 : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-[#0c1d56] dark:hover:text-white'
                 }`}>

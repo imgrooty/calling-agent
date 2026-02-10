@@ -16,7 +16,6 @@ export async function POST(request: Request) {
         const response = await fetch(url, {
             method: "POST",
             headers: {
-                "ngrok-skip-browser-warning": "true",
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 ...(token ? { "Authorization": `Bearer ${token}` } : {}),

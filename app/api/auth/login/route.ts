@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { API_BASE_URL } from "@/lib/constants";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export async function POST(request: Request) {
     try {
@@ -17,15 +17,21 @@ export async function POST(request: Request) {
         const backendUrl = `${API_BASE_URL}/api/v1/auth/login`;
         console.log("Attempting login to:", backendUrl);
 
+        const nextHeaders = await headers();
+        const cookieHeader = nextHeaders.get("cookie") || "";
+
         const response = await fetch(backendUrl, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "Accept": "application/json",
-                "ngrok-skip-browser-warning": "true",
+                ...(cookieHeader ? { "Cookie": cookieHeader } : {}),
             },
             body: JSON.stringify({ email, password }),
         });
+
+        console.log("[Login Route] Backend status:", response.status);
+        console.log("[Login Route] Backend headers:", JSON.stringify(Object.fromEntries(response.headers.entries())));
 
         if (!response.ok) {
             const errorText = await response.text();
@@ -48,10 +54,26 @@ export async function POST(request: Request) {
         }
 
         const data = await response.json();
+        console.log("Backend response data keys:", Object.keys(data));
         let token = data.access_token || data.token; // Handle standard OAuth2 or custom token key
 
+        // If token not in body, check headers (some backends set it in cookies)
         if (!token) {
-            console.error("No token in response:", data);
+            const setCookie = response.headers.get("set-cookie");
+            console.log("Checking Set-Cookie header for token. Header present:", !!setCookie);
+            if (setCookie) {
+                console.log("Raw Set-Cookie header:", setCookie);
+                // Try to find access_token, token, or auth_token in the set-cookie header
+                const match = setCookie.match(/(?:access_token|token|auth_token)=([^;]+)/i);
+                if (match) {
+                    token = match[1];
+                    console.log("Token extracted from Set-Cookie header successfully");
+                }
+            }
+        }
+
+        if (!token) {
+            console.error("No token in response body or headers:", data);
             return NextResponse.json(
                 { message: "Server error: No token received" },
                 { status: 500 }
@@ -75,6 +97,18 @@ export async function POST(request: Request) {
             maxAge: 60 * 60 * 24 * 7, // 1 week
             path: "/",
         });
+
+        // Also handle refresh token if present
+        const refreshTokenMatch = response.headers.get("set-cookie")?.match(/refresh_token=([^;]+)/i);
+        if (refreshTokenMatch) {
+            cookieStore.set("refresh_token", refreshTokenMatch[1], {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 30, // 30 days
+                path: "/",
+            });
+        }
 
         return NextResponse.json({ success: true, user: data.user || {} });
 

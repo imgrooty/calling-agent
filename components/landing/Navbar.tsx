@@ -26,7 +26,7 @@ export const Navbar = () => {
                         <div className="bg-brand-primary p-2 rounded-lg group-hover:rotate-12 transition-transform">
                             <Phone className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-display font-bold tracking-tight text-slate-900 dark:text-white">CallAgent<span className="text-brand-primary">AI</span></span>
+                        <span className="text-xl font-display font-bold tracking-tight text-slate-900 dark:text-white">CallingAgent . <span className="text-brand-primary">AI</span></span>
                     </Link>
 
                     {/* Desktop Nav */}
