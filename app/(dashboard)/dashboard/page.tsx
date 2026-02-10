@@ -208,7 +208,7 @@ export default function DashboardOverview() {
                 {/* Chart Section Mobile */}
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-1">
-                        <span className="text-[11px] font-black text-indigo-900/40 dark:text-indigo-300/40 uppercase tracking-widest">Activity Overview</span>
+                        <span className="text-[11px] font-black text-indigo-900/40 dark:text-indigo-300/40 uppercase tracking-widest">Call Volume</span>
                     </div>
                     <div className="bg-gradient-to-br from-white to-slate-50/50 dark:from-[#11224d] dark:to-[#0c1d56] p-7 rounded-[28px] border border-slate-200/60 dark:border-white/10 shadow-xl">
                         <div className="h-[180px] w-full">
@@ -319,7 +319,7 @@ export default function DashboardOverview() {
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-black text-[#0c1d56] dark:text-white truncate max-w-[140px]">{call.lead_name || 'Unknown Lead'}</h4>
-                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold tracking-tight mt-1">{new Date(call.call_start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-bold tracking-tight mt-1">{new Date(call.call_start_time).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end gap-2">
@@ -419,10 +419,7 @@ function ActivityChart({ data, isMobile }: { data: CallDay[], isMobile?: boolean
                         </motion.div>
                     </div>
                     <span className={`text-[11px] transition-colors uppercase tracking-tight text-center font-bold ${isMobile ? 'text-[#0c1d56]/40 dark:text-white/30' : 'text-slate-600 dark:text-slate-400'}`}>
-                        {isMobile ?
-                            new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' }) :
-                            new Date(d.date).toLocaleDateString('en-US', { weekday: 'short' })
-                        }
+                        {new Date(d.date).toLocaleDateString('en-US', { weekday: isMobile ? 'short' : 'long' })}
                     </span>
                 </div>
             ))}
