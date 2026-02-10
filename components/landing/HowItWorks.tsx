@@ -164,7 +164,8 @@ export const HowItWorks = () => {
                                 >
                                     {/* Animated Glow (hover-only to reduce continuous animation load) */}
                                     <motion.div 
-                                        className="absolute inset-0 bg-gradient-to-r from-[#6366f1]/30 to-[#00d9ff]/30 blur-[50px] rounded-full opacity-0"
+                                        className="absolute inset-0 bg-gradient-to-r from-[#6366f1]/30 to-[#00d9ff]/30 blur-[50px] rounded-full"
+                                        initial={{ opacity: 0 }}
                                         whileHover={{ 
                                             scale: [1, 1.2, 1],
                                             opacity: [0.3, 0.6, 0.3]
