@@ -49,6 +49,7 @@ export default function DashboardOverview() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [logFilter, setLogFilter] = useState("");
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -95,6 +96,17 @@ export default function DashboardOverview() {
             </div>
         );
     }
+
+    // Filter recent calls based on search input
+    const filteredCalls = data?.recent_calls.filter(call => {
+        if (!logFilter) return true;
+        const searchTerm = logFilter.toLowerCase();
+        return (
+            call.lead_name?.toLowerCase().includes(searchTerm) ||
+            call.status.toLowerCase().includes(searchTerm) ||
+            call.property_discussed?.toLowerCase().includes(searchTerm)
+        );
+    }) || [];
 
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
@@ -240,6 +252,9 @@ export default function DashboardOverview() {
                         <input
                             type="text"
                             placeholder="Filter logs..."
+                            aria-label="Filter recent activity logs"
+                            value={logFilter}
+                            onChange={(e) => setLogFilter(e.target.value)}
                             className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-[#0c1d56]/50 border border-slate-200 dark:border-white/10 rounded-xl text-sm font-medium focus:bg-white dark:focus:bg-[#0c1d56] focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all outline-none dark:text-white dark:placeholder-slate-400 shadow-sm"
                         />
                     </div>
@@ -257,15 +272,15 @@ export default function DashboardOverview() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                            {data?.recent_calls.length === 0 ? (
+                            {filteredCalls.length === 0 ? (
                                 <tr>
                                     <td colSpan={5} className="px-8 py-16 text-center text-slate-500 dark:text-slate-400 text-sm font-medium">
-                                        No calls recorded yet.
+                                        {logFilter ? 'No matching calls found.' : 'No calls recorded yet.'}
                                     </td>
                                 </tr>
                             ) : (
-                                data?.recent_calls.map((call, idx) => (
-                                    <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors group">
+                                filteredCalls.map((call) => (
+                                    <tr key={call.call_id} className="hover:bg-slate-50/80 dark:hover:bg-white/5 transition-colors group">
                                         <td className="px-8 py-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-500/20 dark:to-indigo-600/20 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold text-sm shadow-sm border border-indigo-200/50 dark:border-indigo-500/20">
@@ -308,11 +323,11 @@ export default function DashboardOverview() {
                 <div className="flex items-center justify-between px-1">
                     <span className="text-[11px] font-black text-indigo-900/40 dark:text-indigo-300/40 uppercase tracking-widest">Recent Activity</span>
                 </div>
-                {data?.recent_calls.length === 0 ? (
+                {filteredCalls.length === 0 ? (
                     <div className="text-center py-16 text-indigo-900/40 dark:text-indigo-300/40 uppercase tracking-widest text-[10px] font-black">No calls recorded</div>
                 ) : (
-                    data?.recent_calls.map((call, idx) => (
-                        <div key={idx} className="bg-gradient-to-br from-white to-slate-50/50 dark:from-[#11224d] dark:to-[#0c1d56] rounded-[28px] p-5 border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-between gap-4">
+                    filteredCalls.map((call) => (
+                        <div key={call.call_id} className="bg-gradient-to-br from-white to-slate-50/50 dark:from-[#11224d] dark:to-[#0c1d56] rounded-[28px] p-5 border border-slate-200/60 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4">
                                 <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-500/20 dark:to-indigo-600/20 rounded-2xl flex items-center justify-center font-black text-indigo-700 dark:text-indigo-300 text-sm shadow-sm border border-indigo-200/50 dark:border-indigo-500/20">
                                     {(call.lead_name || '?').charAt(0)}
@@ -419,7 +434,7 @@ function ActivityChart({ data, isMobile }: { data: CallDay[], isMobile?: boolean
                         </motion.div>
                     </div>
                     <span className={`text-[11px] transition-colors uppercase tracking-tight text-center font-bold ${isMobile ? 'text-[#0c1d56]/40 dark:text-white/30' : 'text-slate-600 dark:text-slate-400'}`}>
-                        {new Date(d.date).toLocaleDateString('en-US', { weekday: isMobile ? 'short' : 'long' })}
+                        {new Date(d.date).toLocaleDateString(undefined, { weekday: isMobile ? 'short' : 'long' })}
                     </span>
                 </div>
             ))}
