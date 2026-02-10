@@ -34,9 +34,6 @@ export const Navbar = () => {
                     className={`flex items-center justify-between px-6 py-3 rounded-full transition-all duration-300 ${
                         scrolled ? 'glass shadow-2xl shadow-[#6366f1]/10' : 'glass-dark'
                     }`}
-                    animate={{
-                        backdropFilter: scrolled ? 'blur(20px)' : 'blur(12px)',
-                    }}
                 >
                     <Link href="/" className="flex items-center gap-2 group">
                         <motion.div 

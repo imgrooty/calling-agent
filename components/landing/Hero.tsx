@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Play, CheckCircle2, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 const titles = [
     "Never Sleeps",
@@ -15,9 +14,20 @@ const titles = [
 
 export const Hero = () => {
     const [titleIndex, setTitleIndex] = useState(0);
+    const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
     const { scrollY } = useScroll();
     const opacity = useTransform(scrollY, [0, 300], [1, 0]);
     const scale = useTransform(scrollY, [0, 300], [1, 0.8]);
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+        setPrefersReducedMotion(mediaQuery.matches);
+        
+        const handleChange = () => setPrefersReducedMotion(mediaQuery.matches);
+        mediaQuery.addEventListener('change', handleChange);
+        
+        return () => mediaQuery.removeEventListener('change', handleChange);
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -35,7 +45,7 @@ export const Hero = () => {
             {/* Floating Orbs */}
             <motion.div
                 className="absolute top-20 left-20 w-96 h-96 bg-[#6366f1]/20 rounded-full blur-3xl"
-                animate={{
+                animate={prefersReducedMotion ? {} : {
                     x: [0, 100, 0],
                     y: [0, 50, 0],
                 }}
@@ -43,7 +53,7 @@ export const Hero = () => {
             />
             <motion.div
                 className="absolute bottom-20 right-20 w-96 h-96 bg-[#00d9ff]/20 rounded-full blur-3xl"
-                animate={{
+                animate={prefersReducedMotion ? {} : {
                     x: [0, -100, 0],
                     y: [0, -50, 0],
                 }}
@@ -137,7 +147,7 @@ export const Hero = () => {
                 className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20"
             >
                 <motion.div
-                    animate={{ y: [0, 10, 0] }}
+                    animate={prefersReducedMotion ? {} : { y: [0, 10, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
                     className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center pt-2"
                 >

@@ -7,21 +7,21 @@ import * as THREE from 'three';
 
 // --- Logos ---
 const logos = [
-    { name: "EMAAR", color: "#1F2937" },
-    { name: "DAMAC", color: "#1F2937" },
-    { name: "REMAX", color: "#DC2626" },
-    { name: "CBRE", color: "#006A4D" },
-    { name: "JLL", color: "#E30613" },
-    { name: "Keller Williams", color: "#B40101" },
-    { name: "Century 21", color: "#BEAF87" },
-    { name: "Sothebys", color: "#002349" },
-    { name: "Coldwell Banker", color: "#002a5f" },
-    { name: "Savills", color: "#CCA400" },
-    { name: "Knight Frank", color: "#D6000F" },
-    { name: "Colliers", color: "#004F9F" },
-    { name: "Betterhomes", color: "#00AEEF" },
-    { name: "Allsopp & Allsopp", color: "#1F2937" },
-    { name: "Haus & Haus", color: "#1F2937" },
+    { name: "EMAAR" },
+    { name: "DAMAC" },
+    { name: "REMAX" },
+    { name: "CBRE" },
+    { name: "JLL" },
+    { name: "Keller Williams" },
+    { name: "Century 21" },
+    { name: "Sothebys" },
+    { name: "Coldwell Banker" },
+    { name: "Savills" },
+    { name: "Knight Frank" },
+    { name: "Colliers" },
+    { name: "Betterhomes" },
+    { name: "Allsopp & Allsopp" },
+    { name: "Haus & Haus" },
 ];
 
 const row1 = [...logos.slice(0, 8), ...logos.slice(0, 8), ...logos.slice(0, 8), ...logos.slice(0, 8)];
@@ -186,7 +186,7 @@ const CarouselRow = ({ items, speed = 1 }: { items: typeof logos, speed?: number
                         whileHover={{ y: -5 }}
                     >
                         <span
-                            className="text-2xl font-black tracking-tighter text-white/40 hover:text-white/70 transition-colors"
+                            className="text-2xl font-black tracking-tighter text-white/60 hover:text-white/90 transition-colors"
                             style={{
                                 fontFamily: i % 3 === 0 ? 'serif' : 'sans-serif'
                             }}

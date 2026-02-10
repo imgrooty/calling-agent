@@ -61,17 +61,9 @@ export const Pricing = () => {
                             whileHover={{ y: -12, scale: 1.02 }}
                             className="relative p-8 rounded-[2rem] border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] backdrop-blur-xl flex flex-col transition-all duration-300 hover:border-[#6366f1] hover:shadow-[0_20px_60px_rgba(99,102,241,0.3)] group overflow-hidden"
                         >
-                            {/* Animated background gradient */}
+                            {/* Animated background gradient (hover-only) */}
                             <motion.div
                                 className="absolute inset-0 bg-gradient-to-br from-[#6366f1]/10 via-transparent to-[#00d9ff]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                                animate={{
-                                    backgroundPosition: ['0% 0%', '100% 100%'],
-                                }}
-                                transition={{
-                                    duration: 3,
-                                    repeat: Infinity,
-                                    repeatType: 'reverse',
-                                }}
                             />
                             
                             <div className="relative z-10 mb-8">
