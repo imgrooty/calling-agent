@@ -7,21 +7,21 @@ import * as THREE from 'three';
 
 // --- Logos ---
 const logos = [
-    { name: "EMAAR", color: "#1F2937" },
-    { name: "DAMAC", color: "#1F2937" },
-    { name: "REMAX", color: "#DC2626" },
-    { name: "CBRE", color: "#006A4D" },
-    { name: "JLL", color: "#E30613" },
-    { name: "Keller Williams", color: "#B40101" },
-    { name: "Century 21", color: "#BEAF87" },
-    { name: "Sothebys", color: "#002349" },
-    { name: "Coldwell Banker", color: "#002a5f" },
-    { name: "Savills", color: "#CCA400" },
-    { name: "Knight Frank", color: "#D6000F" },
-    { name: "Colliers", color: "#004F9F" },
-    { name: "Betterhomes", color: "#00AEEF" },
-    { name: "Allsopp & Allsopp", color: "#1F2937" },
-    { name: "Haus & Haus", color: "#1F2937" },
+    { name: "EMAAR" },
+    { name: "DAMAC" },
+    { name: "REMAX" },
+    { name: "CBRE" },
+    { name: "JLL" },
+    { name: "Keller Williams" },
+    { name: "Century 21" },
+    { name: "Sothebys" },
+    { name: "Coldwell Banker" },
+    { name: "Savills" },
+    { name: "Knight Frank" },
+    { name: "Colliers" },
+    { name: "Betterhomes" },
+    { name: "Allsopp & Allsopp" },
+    { name: "Haus & Haus" },
 ];
 
 const row1 = [...logos.slice(0, 8), ...logos.slice(0, 8), ...logos.slice(0, 8), ...logos.slice(0, 8)];
@@ -142,45 +142,24 @@ const CarouselRow = ({ items, speed = 1 }: { items: typeof logos, speed?: number
     const [isHovered, setIsHovered] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
-    // Determines the visual position. We use % units.
-    // We assume 4 repeats. One full set is 25% of the total width.
-    // When we reach -25%, we wrap back to 0.
     const x = useTransform(baseX, (v) => `${v}%`);
 
     useAnimationFrame((t, delta) => {
         if (isHovered || isDragging) return;
-
-        // Move logic
-        // Adjust speed factor as needed. Delta is ms since last frame (~16ms).
-        const moveBy = -0.002 * speed * delta; // Slow movement
-
+        const moveBy = -0.002 * speed * delta;
         let newX = baseX.get() + moveBy;
-
-        // Wrap logic: assuming 4 copies, one copy is 25% width.
-        // If we slide past -25%, snap back to 0. (Actually simpler to just wrap on modulus)
-        // But modulus with negative numbers is tricky in JS.
-        // If < -25, add 25.
         if (newX <= -25) {
             newX += 25;
         }
-
         baseX.set(newX);
     });
 
     const handleDragEnd = () => {
         setIsDragging(false);
-        // On drag end, we need to ensure we are still within a reasonable "loop" range
-        // so the animation doesn't drift too far to wrap nicely.
-        // But for <25% wrap logic, it matters less as long as we keep decrementing.
-        // Let's just normalize the value roughly to be within -50 to 0 for safety?
-        // Actually, just let it run. The modulo logic handles the infinite scroll.
-        // Wait, if drag pulls it positive, we should handle that.
         let currentX = baseX.get();
         if (currentX > 0) {
-            // If dragged right past 0, shift back to 'end' of sequence
             baseX.set(currentX - 25);
         } else if (currentX < -25) {
-            // Already handled by loop, but good to be safe
             baseX.set(currentX + 25);
         }
     };
@@ -196,24 +175,25 @@ const CarouselRow = ({ items, speed = 1 }: { items: typeof logos, speed?: number
                 className="flex items-center gap-16 w-max pl-6"
                 style={{ x }}
                 drag="x"
-                // Drag constraints large enough to allow free movement, 
-                // but we rely on the wrap logic to keep visual consistency.
                 dragConstraints={{ left: -10000, right: 10000 }}
                 onDragStart={() => setIsDragging(true)}
                 onDragEnd={handleDragEnd}
             >
                 {items.map((logo, i) => (
-                    <div key={i} className="flex flex-col items-center justify-center shrink-0 transition-transform hover:scale-105 duration-300">
+                    <motion.div 
+                        key={i} 
+                        className="flex flex-col items-center justify-center shrink-0 transition-transform hover:scale-105 duration-300"
+                        whileHover={{ y: -5 }}
+                    >
                         <span
-                            className="text-2xl font-black tracking-tighter"
+                            className="text-2xl font-black tracking-tighter text-white/60 hover:text-white/90 transition-colors"
                             style={{
-                                color: logo.color,
                                 fontFamily: i % 3 === 0 ? 'serif' : 'sans-serif'
                             }}
                         >
                             {logo.name}
                         </span>
-                    </div>
+                    </motion.div>
                 ))}
             </motion.div>
         </div>
@@ -224,79 +204,109 @@ const Testimonials = () => {
     const [activeIndex, setActiveIndex] = useState(0);
 
     return (
-        <section className="py-24 bg-slate-100 relative overflow-hidden">
-            <WaveCanvas />
-
+        <section className="py-24 bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f] relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,217,255,0.05),transparent_50%)]" />
+            
             {/* --- 2-Row Logos Slider --- */}
-            <div className="w-full mb-32 relative z-10 text-center">
-                <h3 className="text-4xl md:text-4xl font-semibold text-[#0b1847] mb-12">
-                    Our Partner Real Estate Organizations Across the Globe
+            <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+                className="w-full mb-32 relative z-10 text-center"
+            >
+                <h3 className="text-3xl md:text-4xl font-display font-bold text-white mb-12">
+                    Trusted by <span className="text-gradient-ai">Leading Organizations</span> Worldwide
                 </h3>
 
-                {/* Fade Edges matching bg-slate-100 */}
-                <div className="absolute left-0 top-12 bottom-0 w-32 bg-gradient-to-r from-slate-100 to-transparent z-20 pointer-events-none" />
-                <div className="absolute right-0 top-12 bottom-0 w-32 bg-gradient-to-l from-slate-100 to-transparent z-20 pointer-events-none" />
+                {/* Fade Edges matching dark theme */}
+                <div className="absolute left-0 top-12 bottom-0 w-32 bg-gradient-to-r from-[#0a0a0f] to-transparent z-20 pointer-events-none" />
+                <div className="absolute right-0 top-12 bottom-0 w-32 bg-gradient-to-l from-[#0a0a0f] to-transparent z-20 pointer-events-none" />
 
                 <div className="space-y-4">
                     <CarouselRow items={row1} speed={1} />
                     <CarouselRow items={row2} speed={0.8} />
                 </div>
-            </div>
+            </motion.div>
 
-            {/* --- Reviews (Light Glass Card) --- */}
-            <div className="max-w-4xl mx-auto px-6 relative z-10 text-center">
-                <h2 className="text-lg md:text-xl font-display font-bold text-[#0b1847] mb-12 uppercase tracking-wider">
+            {/* --- Reviews (Dark Glass Card) --- */}
+            <motion.div 
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6 }}
+                className="max-w-4xl mx-auto px-6 relative z-10 text-center"
+            >
+                <h2 className="text-lg md:text-xl font-display font-bold text-white mb-12 uppercase tracking-wider">
                     Our Happy Customers
                 </h2>
 
-                <div className="relative bg-white/80 backdrop-blur-xl rounded-[2.5rem] p-12 shadow-2xl shadow-[#0b1847]/5 border border-white/60 text-left h-[320px] md:h-[280px] flex flex-col justify-center">
-
+                <motion.div 
+                    key={activeIndex}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="relative glass rounded-[2.5rem] p-12 shadow-2xl shadow-[#6366f1]/10 border border-white/10 text-left min-h-[320px] md:min-h-[280px] flex flex-col justify-center"
+                >
                     <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center md:items-start">
                         {/* Avatar */}
-                        <div className="shrink-0">
-                            <div className={`w-16 h-16 rounded-full ${reviews[activeIndex].color} flex items-center justify-center text-xl font-bold border-4 border-white shadow-lg`}>
+                        <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.2, type: "spring" }}
+                            className="shrink-0"
+                        >
+                            <div className={`w-16 h-16 rounded-full ${reviews[activeIndex].color} flex items-center justify-center text-xl font-bold border-4 border-[#6366f1]/20 shadow-lg shadow-[#6366f1]/20`}>
                                 {reviews[activeIndex].initials}
                             </div>
-                        </div>
+                        </motion.div>
 
                         <div className="flex-1 w-full">
                             {/* Stars */}
-                            <div className="flex text-amber-400 mb-3 gap-0.5 justify-center md:justify-start">
+                            <motion.div 
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="flex text-[#00d9ff] mb-3 gap-0.5 justify-center md:justify-start"
+                            >
                                 {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-5 h-5 fill-current" />)}
-                            </div>
+                            </motion.div>
 
-                            {/* Text Area (Fixed height) */}
-                            <div className="h-28 overflow-hidden mb-2 relative">
-                                <p key={activeIndex} className="text-md md:text-lg font-medium text-slate-700 font-sans">
+                            {/* Text Area */}
+                            <div className="overflow-hidden mb-4">
+                                <p className="text-md md:text-lg font-medium text-gray-300 font-sans leading-relaxed">
                                     &quot;{reviews[activeIndex].text}&quot;
                                 </p>
                             </div>
 
-                            <div className="border-t border-slate-200/60 pt-4 flex flex-col md:flex-row justify-between items-center gap-2">
+                            <div className="border-t border-white/10 pt-4 flex flex-col md:flex-row justify-between items-center gap-2">
                                 <div>
-                                    <div className="font-bold text-[#0b1847] text-lg">{reviews[activeIndex].author}</div>
-                                    <div className="text-slate-500 text-sm font-medium">{reviews[activeIndex].role}</div>
+                                    <div className="font-bold text-white text-lg">{reviews[activeIndex].author}</div>
+                                    <div className="text-gray-400 text-sm font-medium">{reviews[activeIndex].role}</div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* Navigation Dots */}
                 <div className="flex justify-center gap-3 mt-8">
                     {reviews.map((_, i) => (
-                        <button
+                        <motion.button
                             key={i}
                             onClick={() => setActiveIndex(i)}
-                            className={`h-2 rounded-full transition-all duration-200 ${i === activeIndex
-                                ? 'w-8 bg-[#0b1847]'
-                                : 'w-2 bg-[#0b1847]/20 hover:bg-[#0b1847]/40'
+                            whileHover={{ scale: 1.2 }}
+                            whileTap={{ scale: 0.9 }}
+                            className={`h-2 rounded-full transition-all duration-300 ${i === activeIndex
+                                ? 'w-8 bg-gradient-to-r from-[#6366f1] to-[#00d9ff]'
+                                : 'w-2 bg-white/20 hover:bg-white/40'
                                 }`}
                             aria-label={`View review ${i + 1}`}
                         />
                     ))}
                 </div>
-            </div>
+            </motion.div>
         </section>
     );
 };

@@ -113,56 +113,105 @@ const steps = [
 
 export const HowItWorks = () => {
     return (
-        <section className="py-32 bg-slate-50 relative overflow-hidden">
-            <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-                <div className="text-center mb-28">
-                    <h2 className="text-4xl md:text-5xl font-display font-bold text-[#0b1847] mb-6">
-                        Seamless Workflow
+        <section className="py-32 bg-gradient-to-b from-[#0a0a0f] via-[#1a1a2e] to-[#0a0a0f] relative overflow-hidden">
+            {/* Background Effects */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(99,102,241,0.1),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_50%,rgba(0,217,255,0.1),transparent_50%)]" />
+            
+            <div className="max-w-[1400px] mx-auto px-6 md:px-12 relative z-10">
+                <motion.div 
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-100px" }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-28"
+                >
+                    <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white mb-6">
+                        Seamless <span className="text-gradient-ai">AI Workflow</span>
                     </h2>
-                    <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
+                    <p className="text-xl text-gray-400 max-w-2xl mx-auto font-light">
                         From raw data to closed deals in one automated loop.
                     </p>
-                </div>
+                </motion.div>
 
                 <div className="relative">
                     {/* Connecting Line */}
                     <div className="hidden lg:block absolute top-[80px] left-0 w-full h-[2px]">
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#0b1847]/10 to-transparent" />
+                        <motion.div 
+                            initial={{ scaleX: 0 }}
+                            whileInView={{ scaleX: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.5, ease: "easeOut" }}
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-[#6366f1]/30 to-transparent origin-left"
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
                         {steps.map((step, index) => (
                             <motion.div
                                 key={step.id}
-                                initial={{ opacity: 0, y: 30 }}
+                                initial={{ opacity: 0, y: 50 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: index * 0.15 }}
+                                viewport={{ once: true, margin: "-50px" }}
+                                transition={{ duration: 0.6, delay: index * 0.15 }}
                                 className="relative flex flex-col items-center text-center group"
                             >
-                                {/* 3D Visual Container */}
-                                <div className="relative z-10 mb-12 w-40 h-40 group-hover:-translate-y-4 transition-transform duration-500 ease-out">
-                                    {/* Ambient Glow */}
-                                    <div className="absolute inset-0 bg-[#0b1847]/10 blur-[50px] rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                                {/* 3D Visual Container with Glow */}
+                                <motion.div 
+                                    className="relative z-10 mb-12 w-40 h-40"
+                                    whileHover={{ y: -10, scale: 1.05 }}
+                                    transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                    {/* Animated Glow (hover-only to reduce continuous animation load) */}
+                                    <motion.div 
+                                        className="absolute inset-0 bg-gradient-to-r from-[#6366f1]/30 to-[#00d9ff]/30 blur-[50px] rounded-full"
+                                        initial={{ opacity: 0 }}
+                                        whileHover={{ 
+                                            scale: [1, 1.2, 1],
+                                            opacity: [0.3, 0.6, 0.3]
+                                        }}
+                                        transition={{ 
+                                            duration: 3,
+                                            repeat: Infinity
+                                        }}
+                                    />
 
                                     {/* Visual Wrapper */}
                                     <div className="w-full h-full relative flex items-center justify-center">
                                         <step.Visual />
                                     </div>
 
-                                    {/* Number Badge */}
-                                    <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-white text-[#0b1847] flex items-center justify-center text-sm font-bold rounded-full border border-slate-100 shadow-xl z-20">
+                                    {/* Number Badge with gradient */}
+                                    <motion.div 
+                                        initial={{ scale: 0 }}
+                                        whileInView={{ scale: 1 }}
+                                        viewport={{ once: true }}
+                                        transition={{ delay: index * 0.15 + 0.3, type: "spring" }}
+                                        className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] text-white flex items-center justify-center text-sm font-bold rounded-full border-2 border-white/20 shadow-xl z-20"
+                                    >
                                         {step.id}
-                                    </div>
-                                </div>
+                                    </motion.div>
+                                </motion.div>
 
                                 {/* Text Content */}
-                                <h3 className="text-2xl font-bold text-slate-900 mb-3 group-hover:text-[#0b1847] transition-colors duration-300">
+                                <motion.h3 
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.15 + 0.2 }}
+                                    className="text-2xl font-bold text-white mb-3 group-hover:text-gradient-ai transition-all duration-300"
+                                >
                                     {step.title}
-                                </h3>
-                                <p className="text-slate-500 leading-relaxed font-medium px-4">
+                                </motion.h3>
+                                <motion.p 
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    viewport={{ once: true }}
+                                    transition={{ delay: index * 0.15 + 0.3 }}
+                                    className="text-gray-400 leading-relaxed font-medium px-4"
+                                >
                                     {step.description}
-                                </p>
+                                </motion.p>
                             </motion.div>
                         ))}
                     </div>
