@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Phone, ArrowRight, Menu, X, Sparkles } from "lucide-react";
+import { Phone, ArrowRight, Menu, X } from "lucide-react";
 import { motion, AnimatePresence, useScroll } from "framer-motion";
 
 export const Navbar = () => {
