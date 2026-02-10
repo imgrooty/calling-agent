@@ -75,32 +75,123 @@ export default function LeadDetailsPage(props: any) {
     const [error, setError] = useState<string | null>(null);
     const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
     const [transcriptCall, setTranscriptCall] = useState<CallDetail | null>(null);
+    const [callStatus, setCallStatus] = useState<"idle" | "ongoing" | "completed">("idle");
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+
+    const fetchDetails = async (showLoading = true) => {
+        try {
+            if (showLoading) setIsLoading(true);
+            const response = await fetch(`/api/leads/${leadId}`);
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch lead details");
+            }
+
+            const result = await response.json();
+            setData(result);
+            return result;
+        } catch (err: any) {
+            console.error("Error fetching lead details:", err);
+            setError(err.message);
+        } finally {
+            if (showLoading) setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchDetails = async () => {
-            try {
-                setIsLoading(true);
-                // Use leadId from params
-                const response = await fetch(`/api/leads/${leadId}`);
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch lead details");
-                }
-
-                const result = await response.json();
-                setData(result);
-            } catch (err: any) {
-                console.error("Error fetching lead details:", err);
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         if (leadId) {
             fetchDetails();
         }
     }, [leadId]);
+
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (callStatus === "ongoing") {
+            const pollingStartTime = Date.now();
+            console.log("Starting polling at:", new Date(pollingStartTime).toLocaleString());
+
+            interval = setInterval(async () => {
+                const updatedData = await fetchDetails(false);
+                if (updatedData?.details && updatedData.details.length > 0) {
+                    const cid = activeConversationId;
+
+                    // 1. Try to find the specific call by ID with normalization
+                    const activeCall = updatedData.details.find((c: any) => {
+                        if (!cid) return false;
+                        const recordId = String(c.id || "");
+                        return recordId === cid ||
+                            recordId === cid.replace("conv_", "") ||
+                            cid === recordId.replace("conv_", "");
+                    });
+
+                    // 2. Fallback: if not found by ID, look at the most recent record
+                    const callToCheck = activeCall || updatedData.details[0];
+
+                    if (callToCheck) {
+                        const status = String(callToCheck.status || "").toLowerCase().trim();
+                        const recordTime = new Date(callToCheck.call_start_time || callToCheck.created_at || 0).getTime();
+
+                        console.log("Checking call:", {
+                            id: callToCheck.id,
+                            status,
+                            recordTime: new Date(recordTime).toLocaleString(),
+                            foundById: !!activeCall
+                        });
+
+                        const isFinished = status === "completed" || status === "failed" || status === "done" || status === "not received" || status === "not_received";
+
+                        // Only finish if we found it by ID OR it's a very recent record (to avoid matching old calls)
+                        if (activeCall && isFinished) {
+                            console.log("Call completion detected by ID.");
+                            setCallStatus("completed");
+                            setActiveConversationId(null);
+                            setTimeout(() => setCallStatus("idle"), 5000);
+                        } else if (!activeCall && isFinished && recordTime > (pollingStartTime - 60000)) {
+                            console.log("Call completion detected by recent record fallback.");
+                            setCallStatus("completed");
+                            setActiveConversationId(null);
+                            setTimeout(() => setCallStatus("idle"), 5000);
+                        }
+                    }
+                }
+            }, 3000);
+        }
+        return () => clearInterval(interval);
+    }, [callStatus, leadId, activeConversationId]);
+
+    const handleCallLead = async () => {
+        try {
+            setErrorMsg(null);
+            setCallStatus("ongoing");
+            const response = await fetch("/api/call/trigger", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    lead_id: leadId,
+                    phone_number: data?.lead?.phone_number,
+                    name: data?.lead?.name
+                }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json();
+                throw new Error(errData.message || "Failed to trigger call");
+            }
+
+            const result = await response.json();
+            console.log("Call triggered:", result);
+            if (result.conversation_id) {
+                setActiveConversationId(result.conversation_id);
+            }
+        } catch (err: any) {
+            console.error("Error triggering call:", err);
+            setErrorMsg(err.message);
+            setCallStatus("idle");
+        }
+    };
 
     const formatDuration = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -152,19 +243,19 @@ export default function LeadDetailsPage(props: any) {
                                 {data?.lead?.name?.charAt(0) || 'L'}
                             </div>
                             <div>
-                                <h2 className="text-xl font-medium text-slate-900 dark:text-white tracking-tight">{data?.lead?.name || 'Lead'} Details</h2>
+                                <h2 className="text-2xl font-semibold text-black dark:text-white">{data?.lead?.name ? `${data.lead.name}'s` : 'Lead'} Details</h2>
                                 <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-1.5">
-                                    <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+                                    <div className="flex items-center gap-2 text-sm text-black dark:text-slate-400 font-normal">
                                         <Phone className="w-3.5 h-3.5 text-slate-400" />
                                         {data?.lead?.phone_number || 'N/A'}
                                     </div>
                                     {data?.lead?.email && (
-                                        <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+                                        <div className="flex items-center gap-2 text-sm text-black dark:text-slate-400 font-normal">
                                             <Mail className="w-3.5 h-3.5 text-slate-400" />
                                             {data?.lead?.email}
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-2 text-[12px] text-slate-400 dark:text-slate-500 border-l border-slate-200 dark:border-white/10 pl-5">
+                                    <div className="flex items-center gap-2 text-[13px] text-black dark:text-slate-500 border-l border-slate-200 dark:border-white/10 pl-5 font-normal">
                                         <Calendar className="w-3.5 h-3.5" />
                                         {data?.lead?.created_at ? formatDate(data.lead.created_at) : 'N/A'}
                                     </div>
@@ -173,13 +264,41 @@ export default function LeadDetailsPage(props: any) {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 bg-[#0c1d56] hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors shadow-lg shadow-indigo-100 dark:shadow-none">
-                                <Phone className="w-4 h-4" />
-                                Call Lead Now
+                            <button
+                                onClick={handleCallLead}
+                                disabled={callStatus === "ongoing"}
+                                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg dark:shadow-none ${callStatus === "ongoing"
+                                    ? "bg-slate-400 cursor-not-allowed text-white"
+                                    : callStatus === "completed"
+                                        ? "bg-emerald-600 text-white"
+                                        : "bg-[#0c1d56] hover:bg-slate-800 text-white shadow-indigo-100"
+                                    }`}
+                            >
+                                {callStatus === "ongoing" ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                        Call Ongoing
+                                    </>
+                                ) : callStatus === "completed" ? (
+                                    <>
+                                        <CheckCircle2 className="w-4 h-4" />
+                                        Call Completed
+                                    </>
+                                ) : (
+                                    <>
+                                        <Phone className="w-4 h-4" />
+                                        Call Lead Now
+                                    </>
+                                )}
                             </button>
+                            {errorMsg && (
+                                <span className="text-xs text-rose-500 font-medium animate-pulse">
+                                    {errorMsg}
+                                </span>
+                            )}
                             <div className="bg-slate-50 dark:bg-white/5 px-5 py-2.5 rounded-2xl border border-slate-100 dark:border-white/10 flex flex-col items-end gap-0.5">
-                                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Total Interest</span>
-                                <span className="text-[#0c1d56] dark:text-slate-200 text-sm font-semibold">{data?.total || 0} Successful Calls</span>
+                                <span className="text-[11px] text-black opacity-60 dark:text-slate-400 uppercase font-normal">Total Interest</span>
+                                <span className="text-black dark:text-slate-200 text-[15px] font-normal">{data?.total || 0} Successful Calls</span>
                             </div>
                         </div>
                     </div>
@@ -191,11 +310,11 @@ export default function LeadDetailsPage(props: any) {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50/30 dark:bg-white/5 border-b border-slate-100 dark:border-white/10">
-                                    <th className="px-8 py-5 text-[15px] text-[#0c1d56] dark:text-slate-300 ">Date & Time</th>
-                                    <th className="px-8 py-5 text-[15px] text-[#0c1d56] dark:text-slate-300 ">Duration</th>
-                                    <th className="px-8 py-5 text-[15px] text-[#0c1d56] dark:text-slate-300 ">Status</th>
-                                    <th className="px-8 py-5 text-[15px] text-[#0c1d56] dark:text-slate-300 ">Primary Topic</th>
-                                    <th className="px-8 py-5 text-[15px] text-[#0c1d56] dark:text-slate-300 text-right">Actions</th>
+                                    <th className="px-8 py-5 text-[16px] font-semibold text-black dark:text-slate-300">Date & Time</th>
+                                    <th className="px-8 py-5 text-[16px] font-semibold text-black dark:text-slate-300">Duration</th>
+                                    <th className="px-8 py-5 text-[16px] font-semibold text-black dark:text-slate-300">Status</th>
+                                    <th className="px-8 py-5 text-[16px] font-semibold text-black dark:text-slate-300">Primary Topic</th>
+                                    <th className="px-8 py-5 text-[16px] font-semibold text-black dark:text-slate-300 text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50 dark:divide-white/5">
@@ -215,39 +334,43 @@ export default function LeadDetailsPage(props: any) {
                                                 <tr className={`hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all group ${isExpanded ? 'bg-slate-50/80 dark:bg-white/5' : ''}`}>
                                                     <td className="px-8 py-6">
                                                         <div className="flex flex-col">
-                                                            <span className="text-[15px] font-medium text-slate-900 dark:text-slate-200">
+                                                            <span className="text-[16px] font-normal text-black dark:text-slate-200">
                                                                 {formatDate(call.call_start_time)}
                                                             </span>
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6">
-                                                        <div className="flex items-center gap-2 text-[16px] text-slate-700 dark:text-slate-400">
+                                                        <div className="flex items-center gap-2 text-[17px] text-black font-normal dark:text-slate-400">
                                                             {formatDuration(call.duration_seconds)}
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-6">
-                                                        <span className={`inline-flex items-center text-[13px] font-semibold uppercase tracking-tight ${call.status === 'completed'
+                                                        <span className={`inline-flex items-center text-[13px] font-normal uppercase ${call.status?.toLowerCase().trim() === 'completed' || call.status?.toLowerCase().trim() === 'done'
                                                             ? 'text-[#0c1d56] dark:text-indigo-400'
-                                                            : 'text-slate-400'
+                                                            : call.status?.toLowerCase().trim().includes('not received') || call.status?.toLowerCase().trim().includes('not_received')
+                                                                ? 'text-rose-500'
+                                                                : 'text-slate-400'
                                                             }`}>
                                                             {call.status}
                                                         </span>
                                                     </td>
                                                     <td className="px-8 py-6">
-                                                        <span className="text-[15px] font-semibold text-slate-900 dark:text-slate-100">
+                                                        <span className="text-[16px] font-normal text-black dark:text-slate-100">
                                                             {call.property_discussed || 'General Inquiry'}
                                                         </span>
                                                     </td>
                                                     <td className="px-8 py-6 text-right">
-                                                        <button
-                                                            onClick={() => setExpandedIndex(isExpanded ? null : index)}
-                                                            className={`px-4 py-2 rounded-xl text-[13px] font-bold transition-all flex items-center gap-2 ml-auto cursor-pointer shadow-sm ${isExpanded
-                                                                ? 'bg-[#0c1d56] text-white shadow-[#0c1d56]/20'
-                                                                : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[#0c1d56] dark:text-white hover:border-[#0c1d56] dark:hover:border-white'
-                                                                }`}
-                                                        >
-                                                            {isExpanded ? 'Hide Details' : 'View Insights'}
-                                                        </button>
+                                                        {!(call.status?.toLowerCase().includes('not received') || call.status?.toLowerCase().includes('not_received')) && (
+                                                            <button
+                                                                onClick={() => setExpandedIndex(isExpanded ? null : index)}
+                                                                className={`px-4 py-2 rounded-xl text-[15px] font-bold transition-all flex items-center gap-2 ml-auto cursor-pointer shadow-sm ${isExpanded
+                                                                    ? 'bg-[#0c1d56] text-white shadow-[#0c1d56]/20'
+                                                                    : 'bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 text-[#0c1d56] dark:text-white hover:border-[#0c1d56] dark:hover:border-white'
+                                                                    }`}
+                                                            >
+                                                                {isExpanded ? 'Hide Details' : 'View Insights'}
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                                 <AnimatePresence>
@@ -270,11 +393,11 @@ export default function LeadDetailsPage(props: any) {
                                                                                             <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-[#0c1d56] dark:text-slate-300">
                                                                                                 <AudioLines size={18} />
                                                                                             </div>
-                                                                                            <span className="text-sm font-semibold text-slate-900 dark:text-slate-200 tracking-tight">Session Audio</span>
+                                                                                            <span className="text-[15px] font-semibold text-black dark:text-slate-200">Session Audio</span>
                                                                                         </div>
                                                                                         <button
                                                                                             onClick={() => setTranscriptCall(call)}
-                                                                                            className="px-5 py-2 bg-[#0c1d56] text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all shadow-md shadow-indigo-100 dark:shadow-none cursor-pointer"
+                                                                                            className="px-5 py-2 bg-[#0c1d56] text-white rounded-xl text-[14px] font-bold hover:bg-slate-800 transition-all shadow-md shadow-indigo-100 dark:shadow-none cursor-pointer"
                                                                                         >
                                                                                             Review Transcript
                                                                                         </button>
@@ -293,10 +416,10 @@ export default function LeadDetailsPage(props: any) {
                                                                                         <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center text-[#0c1d56] dark:text-slate-300">
                                                                                             <FileText size={18} />
                                                                                         </div>
-                                                                                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-200 tracking-tight">Executive Summary</span>
+                                                                                        <span className="text-[15px] font-semibold text-black dark:text-slate-200">Executive Summary</span>
                                                                                     </div>
                                                                                     <div className="p-7 bg-white dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
-                                                                                        <p className="text-[14px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                                                                        <p className="text-[15px] text-black dark:text-slate-300 leading-relaxed font-normal">
                                                                                             {call.summary?.summary_text || call.call_log || "Summary analysis in progress..."}
                                                                                         </p>
                                                                                     </div>
@@ -306,26 +429,26 @@ export default function LeadDetailsPage(props: any) {
                                                                             {/* Right: Insights Grid */}
                                                                             <div className="lg:col-span-5 space-y-10 border-l border-slate-200 dark:border-white/10 pl-12">
                                                                                 <div className="space-y-6">
-                                                                                    <h4 className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">Interest Profile</h4>
+                                                                                    <h4 className="text-[14px] font-bold text-black dark:text-slate-400">Interest Profile</h4>
 
                                                                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-10">
                                                                                         <div className="space-y-1.5">
-                                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Budget Entry</span>
-                                                                                            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{call.interest?.data?.budget || "N/A"}</span>
+                                                                                            <span className="text-[13px] font-semibold block opacity-80 text-black">Budget Entry</span>
+                                                                                            <span className="text-[15px] font-normal text-black dark:text-slate-100">{call.interest?.data?.budget || "N/A"}</span>
                                                                                         </div>
                                                                                         <div className="space-y-1.5">
-                                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Preferred Location</span>
-                                                                                            <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">{call.interest?.data?.preferred_location || "N/A"}</span>
+                                                                                            <span className="text-[13px] font-semibold block opacity-80 text-black">Preferred Location</span>
+                                                                                            <span className="text-[15px] font-normal text-black dark:text-slate-100">{call.interest?.data?.preferred_location || "N/A"}</span>
                                                                                         </div>
                                                                                         <div className="space-y-1.5">
-                                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Lead Outcome</span>
-                                                                                            <span className={`text-[11px] font-bold uppercase px-2 py-0.5 rounded italic bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 inline-block`}>
+                                                                                            <span className="text-[13px] font-semibold block opacity-80 text-black">Lead Outcome</span>
+                                                                                            <span className={`text-[12px] font-normal uppercase px-2 py-0.5 rounded italic bg-slate-100 dark:bg-white/5 text-black dark:text-slate-400 inline-block`}>
                                                                                                 {call.summary?.outcome || "Unknown"}
                                                                                             </span>
                                                                                         </div>
                                                                                         <div className="space-y-1.5">
-                                                                                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block">Next Step</span>
-                                                                                            <span className="text-[12px] font-semibold text-[#0c1d56] dark:text-indigo-400">
+                                                                                            <span className="text-[13px] font-semibold block opacity-80 text-black">Next Step</span>
+                                                                                            <span className="text-[13px] font-normal text-black dark:text-indigo-400">
                                                                                                 {call.visit_scheduled_time ? "Visit Scheduled" : "Follow-up Required"}
                                                                                             </span>
                                                                                         </div>
@@ -333,8 +456,8 @@ export default function LeadDetailsPage(props: any) {
 
                                                                                     <div className="pt-8 space-y-4">
                                                                                         <div className="flex items-center justify-between">
-                                                                                            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Interest Level Score</span>
-                                                                                            <span className="text-sm font-black text-[#0c1d56] dark:text-slate-200">{call.interest?.data?.interest_level || "0"}/10</span>
+                                                                                            <span className="text-[12px] font-normal text-black uppercase opacity-70">Interest Level Score</span>
+                                                                                            <span className="text-[15px] font-normal text-black dark:text-slate-200">{call.interest?.data?.interest_level || "0"}/10</span>
                                                                                         </div>
                                                                                         <div className="w-full h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                                                                                             <motion.div
@@ -362,7 +485,7 @@ export default function LeadDetailsPage(props: any) {
                     </div>
 
                     <div className="px-8 py-6 bg-slate-50/20 dark:bg-white/5 border-t border-slate-100 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="text-[11px] text-slate-400 font-bold uppercase tracking-[0.2em]">
+                        <div className="text-[12px] text-black font-normal uppercase">
                             {data?.details?.length || 0} Professional Records
                         </div>
                     </div>
@@ -378,6 +501,9 @@ export default function LeadDetailsPage(props: any) {
                     setTranscriptCall={setTranscriptCall}
                     expandedIndex={expandedIndex}
                     setExpandedIndex={setExpandedIndex}
+                    callStatus={callStatus}
+                    handleCallLead={handleCallLead}
+                    errorMsg={errorMsg}
                 />
             </div>
 
@@ -396,14 +522,20 @@ function MobileLeadView({
     formatDuration,
     setTranscriptCall,
     expandedIndex,
-    setExpandedIndex
+    setExpandedIndex,
+    callStatus,
+    handleCallLead,
+    errorMsg
 }: {
     data: DetailsResponse | null,
     formatDate: (d: string) => string,
     formatDuration: (s: number) => string,
     setTranscriptCall: (call: CallDetail) => void,
     expandedIndex: number | null,
-    setExpandedIndex: (i: number | null) => void
+    setExpandedIndex: (i: number | null) => void,
+    callStatus: "idle" | "ongoing" | "completed",
+    handleCallLead: () => void,
+    errorMsg: string | null
 }) {
     if (!data?.lead) return null;
 
@@ -414,24 +546,54 @@ function MobileLeadView({
                 <div className="w-20 h-20 bg-[#0c1d56] rounded-3xl flex items-center justify-center text-white text-3xl font-bold shadow-xl shadow-indigo-100 dark:shadow-none mb-5">
                     {data.lead.name?.charAt(0) || 'L'}
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{data.lead.name} Details</h2>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{data.lead.name ? `${data.lead.name}'s` : 'Lead'} Details</h2>
                 <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 mt-2">
                     <Phone className="w-4 h-4" />
-                    <span className="text-sm font-medium tracking-wide">{data.lead.phone_number}</span>
+                    <span className="text-sm font-medium">{data.lead.phone_number}</span>
                 </div>
             </div>
 
             {/* Stats */}
             <div className="bg-slate-50 dark:bg-white/5 rounded-2xl p-5 flex items-center justify-between mx-1">
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">TOTAL INTEREST</span>
+                <span className="text-[10px] text-slate-400 uppercase font-bold">TOTAL INTEREST</span>
                 <span className="text-[#0c1d56] dark:text-white text-sm font-bold">{data.total} Successful Calls</span>
             </div>
 
             {/* CTA */}
-            <button className="w-[80%] mx-auto block bg-[#0c1d56] text-white py-3 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-900/20 mb-6 flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                <Phone className="w-4 h-4" />
-                Call Lead Now
-            </button>
+            <div className="px-4 space-y-2">
+                <button
+                    onClick={handleCallLead}
+                    disabled={callStatus === "ongoing"}
+                    className={`w-full bg-[#0c1d56] text-white py-3 rounded-2xl font-bold text-sm shadow-xl mb-2 flex items-center justify-center gap-2 active:scale-95 transition-all ${callStatus === "ongoing"
+                        ? "bg-slate-400 cursor-not-allowed"
+                        : callStatus === "completed"
+                            ? "bg-emerald-600 shadow-emerald-900/20"
+                            : "shadow-indigo-900/20"
+                        }`}
+                >
+                    {callStatus === "ongoing" ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Call Ongoing
+                        </>
+                    ) : callStatus === "completed" ? (
+                        <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            Call Completed
+                        </>
+                    ) : (
+                        <>
+                            <Phone className="w-4 h-4" />
+                            Call Lead Now
+                        </>
+                    )}
+                </button>
+                {errorMsg && (
+                    <p className="text-[10px] text-rose-500 text-center font-bold uppercase tracking-wider animate-pulse">
+                        {errorMsg}
+                    </p>
+                )}
+            </div>
 
             {/* Call History List */}
             <div className="space-y-4">
@@ -445,11 +607,16 @@ function MobileLeadView({
                                 <div className="flex items-start justify-between mb-6">
                                     <div>
                                         <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1.5">SESSION DATE</div>
-                                        <div className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">
+                                        <div className="text-[15px] font-bold text-slate-900 dark:text-white">
                                             {formatDate(call.call_start_time)}
                                         </div>
                                     </div>
-                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${call.status === 'completed' ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-100 text-slate-500'}`}>
+                                    <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${call.status?.toLowerCase().trim() === 'completed' || call.status?.toLowerCase().trim() === 'done'
+                                        ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400'
+                                        : call.status?.toLowerCase().trim().includes('not received') || call.status?.toLowerCase().trim().includes('not_received')
+                                            ? 'bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400'
+                                            : 'bg-slate-100 text-slate-500'
+                                        }`}>
                                         {call.status}
                                     </div>
                                 </div>
@@ -457,16 +624,16 @@ function MobileLeadView({
                                 {/* Metrics Row */}
                                 <div className="flex items-end justify-between mb-6">
                                     <div>
-                                        <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1.5">DURATION</div>
+                                        <div className="text-[10px] text-slate-400 uppercase font-bold mb-1.5">DURATION</div>
                                         <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300 font-medium text-sm">
                                             <Clock className="w-3.5 h-3.5 text-slate-400" />
                                             {formatDuration(call.duration_seconds)}
                                         </div>
                                     </div>
-                                    {!isExpanded && (
+                                    {!isExpanded && !(call.status?.toLowerCase().includes('not received') || call.status?.toLowerCase().includes('not_received')) && (
                                         <button
                                             onClick={() => setExpandedIndex(index)}
-                                            className="px-4 py-2 bg-white dark:bg-white/5 border border-indigo-200 dark:border-white/10 text-[#0c1d56] dark:text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-sm shadow-indigo-100 dark:shadow-none active:scale-95 transition-all"
+                                            className="px-4 py-2 bg-white dark:bg-white/5 border border-indigo-200 dark:border-white/10 text-[#0c1d56] dark:text-white rounded-xl text-[10px] font-semibold uppercase shadow-sm shadow-indigo-100 dark:shadow-none active:scale-95 transition-all"
                                         >
                                             VIEW INSIGHTS
                                         </button>
@@ -479,7 +646,7 @@ function MobileLeadView({
                                         {/* Close Button */}
                                         <button
                                             onClick={() => setExpandedIndex(null)}
-                                            className="w-[80%] mx-auto block bg-[#0c1d56] text-white py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest shadow-md shadow-indigo-900/10 active:scale-95 transition-transform"
+                                            className="w-[80%] mx-auto block bg-[#0c1d56] text-white py-2.5 rounded-xl text-xs font-bold uppercase shadow-md shadow-indigo-900/10 active:scale-95 transition-transform"
                                         >
                                             CLOSE INSIGHTS
                                         </button>
@@ -491,7 +658,7 @@ function MobileLeadView({
                                                     <AudioLines size={14} />
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold">SESSION RECORDING</div>
+                                                    <div className="text-[9px] text-slate-400 uppercase font-bold">SESSION RECORDING</div>
                                                     <div className="text-sm font-bold text-slate-900 dark:text-white">Audio Playback</div>
                                                 </div>
                                             </div>
@@ -506,7 +673,7 @@ function MobileLeadView({
 
                                             <button
                                                 onClick={() => setTranscriptCall(call)}
-                                                className="w-[90%] mx-auto block bg-indigo-50 dark:bg-indigo-500/10 text-[#0c1d56] dark:text-indigo-300 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                                                className="w-[90%] mx-auto block bg-indigo-50 dark:bg-indigo-500/10 text-[#0c1d56] dark:text-indigo-300 py-2.5 rounded-xl text-xs font-bold uppercase hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
                                             >
                                                 REVIEW TRANSCRIPT
                                             </button>
@@ -516,10 +683,10 @@ function MobileLeadView({
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2">
                                                 <FileText className="w-4 h-4 text-slate-400" />
-                                                <span className="text-[10px] items-center font-bold text-slate-400 uppercase tracking-widest">EXECUTIVE SUMMARY</span>
+                                                <span className="text-[10px] items-center font-bold text-slate-400 uppercase">EXECUTIVE SUMMARY</span>
                                             </div>
                                             <div className="p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
-                                                <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                                                <p className="text-[16px] text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                                                     {call.summary?.summary_text || call.call_log || "Summary analysis in progress..."}
                                                 </p>
                                             </div>
@@ -527,25 +694,25 @@ function MobileLeadView({
 
                                         {/* Interest Profile */}
                                         <div className="space-y-6">
-                                            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-white/10 pb-2">INTEREST PROFILE</div>
+                                            <div className="text-[14px] font-bold text-black border-b border-slate-100 dark:border-white/10 pb-2">Interest Profile</div>
 
                                             <div className="grid grid-cols-2 gap-6">
                                                 <div>
-                                                    <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">BUDGET ENTRY</div>
+                                                    <div className="text-[12px] text-black font-semibold mb-1 opacity-80">Budget Entry</div>
                                                     <div className="text-sm font-bold text-slate-900 dark:text-white">{call.interest?.data?.budget || "N/A"}</div>
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">PREFERRED LOCATION</div>
+                                                    <div className="text-[12px] text-black font-semibold mb-1 opacity-80">Preferred Location</div>
                                                     <div className="text-sm font-bold text-slate-900 dark:text-white">{call.interest?.data?.preferred_location || "N/A"}</div>
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">LEAD OUTCOME</div>
+                                                    <div className="text-[12px] text-black font-semibold mb-1 opacity-80">Lead Outcome</div>
                                                     <span className="inline-block px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/5 text-[10px] font-bold text-slate-600 dark:text-slate-400 italic">
                                                         {call.summary?.outcome || "Unknown"}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">NEXT STEP</div>
+                                                    <div className="text-[12px] text-black font-semibold mb-1 opacity-80">Next Step</div>
                                                     <div className="text-xs font-bold text-[#0c1d56] dark:text-indigo-400">
                                                         {call.visit_scheduled_time ? "Visit Scheduled" : "Follow-up Required"}
                                                     </div>
@@ -554,7 +721,7 @@ function MobileLeadView({
 
                                             <div className="space-y-2 pt-2">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">INTEREST LEVEL SCORE</span>
+                                                    <span className="text-[12px] font-semibold text-black opacity-80">Interest Level Score</span>
                                                     <span className="text-xs font-black text-[#0c1d56] dark:text-white">{call.interest?.data?.interest_level || "0"}/10</span>
                                                 </div>
                                                 <div className="w-full h-1.5 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
@@ -586,8 +753,8 @@ function TranscriptModal({ isOpen, onClose, call }: { isOpen: boolean, onClose: 
                 {/* Header */}
                 <div className="px-6 py-5 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/50 dark:bg-white/5">
                     <div>
-                        <h3 className="text-lg font-bold text-[#0c1d56] dark:text-white">Call Transcript</h3>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Full history of conversation</p>
+                        <h3 className="text-lg font-semibold text-[#0c1d56] dark:text-white">Call Transcript</h3>
+                        <p className="text-[12px] text-slate-400 font-bold">Full history of conversation</p>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl transition-colors">
                         <XCircle className="w-6 h-6 text-slate-400" />
@@ -599,19 +766,19 @@ function TranscriptModal({ isOpen, onClose, call }: { isOpen: boolean, onClose: 
                     {call.history && call.history.length > 0 ? (
                         call.history.map((msg, idx) => (
                             <div key={idx} className={`flex flex-col ${msg.role === 'agent' ? 'items-start' : 'items-end'}`}>
-                                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm font-medium leading-relaxed ${msg.role === 'agent'
+                                <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-[18px] font-medium leading-relaxed ${msg.role === 'agent'
                                     ? 'bg-indigo-50 text-indigo-900 dark:bg-indigo-500/10 dark:text-indigo-200 rounded-tl-none'
                                     : 'bg-emerald-50 text-emerald-900 dark:bg-emerald-500/10 dark:text-emerald-200 rounded-tr-none'
                                     }`}>
                                     {msg.content || <span className="italic opacity-50">No content</span>}
                                 </div>
-                                <span className="text-[9px] font-black uppercase tracking-tighter text-slate-400 px-1 mt-1">
+                                <span className="text-[9px] font-black uppercase text-slate-400 px-1 mt-1">
                                     {msg.role}
                                 </span>
                             </div>
                         ))
                     ) : (
-                        <div className="text-center py-20 text-slate-400 uppercase tracking-widest text-xs font-bold">
+                        <div className="text-center py-20 text-slate-400 uppercase text-xs font-bold">
                             No transcript available for this call.
                         </div>
                     )}
